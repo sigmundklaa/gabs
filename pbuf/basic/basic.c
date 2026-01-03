@@ -5,8 +5,8 @@
 #include <gabs/pbuf.h>
 #include "gabs_pbuf_def.h"
 
-struct gabs_pbuf_basic GABS_PBUF_IMPL(new)(const gabs_allocator_h *alloc,
-                                           size_t size)
+struct gabs_pbuf_basic
+GABS_PBUF_IMPL(gabs_pbuf_new)(const gabs_allocator_h *alloc, size_t size)
 {
         struct gabs_pbuf_basic_frag *buf;
         int status;
@@ -28,8 +28,9 @@ struct gabs_pbuf_basic GABS_PBUF_IMPL(new)(const gabs_allocator_h *alloc,
         return (struct gabs_pbuf_basic){.frags = buf};
 }
 
-struct gabs_pbuf_basic GABS_PBUF_IMPL(new_ro)(const gabs_allocator_h *alloc,
-                                              uint8_t *data, size_t size)
+struct gabs_pbuf_basic
+GABS_PBUF_IMPL(gabs_pbuf_new_ro)(const gabs_allocator_h *alloc, uint8_t *data,
+                                 size_t size)
 {
         struct gabs_pbuf_basic buf;
         struct gabs_pbuf_basic_frag *frag;
@@ -50,17 +51,17 @@ struct gabs_pbuf_basic GABS_PBUF_IMPL(new_ro)(const gabs_allocator_h *alloc,
         return buf;
 }
 
-bool GABS_PBUF_IMPL(okay)(struct gabs_pbuf_basic buf)
+bool GABS_PBUF_IMPL(gabs_pbuf_okay)(struct gabs_pbuf_basic buf)
 {
         return buf.frags != NULL;
 }
 
-void GABS_PBUF_IMPL(incref)(struct gabs_pbuf_basic buf)
+void GABS_PBUF_IMPL(gabs_pbuf_incref)(struct gabs_pbuf_basic buf)
 {
         buf.frags->refcnt++;
 }
 
-void GABS_PBUF_IMPL(decref)(struct gabs_pbuf_basic buf)
+void GABS_PBUF_IMPL(gabs_pbuf_decref)(struct gabs_pbuf_basic buf)
 {
         struct gabs_pbuf_basic_frag *cur;
         struct gabs_pbuf_basic_frag *next;
@@ -76,7 +77,8 @@ void GABS_PBUF_IMPL(decref)(struct gabs_pbuf_basic buf)
         }
 }
 
-struct gabs_pbuf_basic_ci GABS_PBUF_IMPL(ci_init)(struct gabs_pbuf_basic *buf)
+struct gabs_pbuf_basic_ci
+GABS_PBUF_IMPL(gabs_pbuf_ci_init)(struct gabs_pbuf_basic *buf)
 {
         return (struct gabs_pbuf_basic_ci){
                 .cur = buf->frags,
@@ -84,7 +86,8 @@ struct gabs_pbuf_basic_ci GABS_PBUF_IMPL(ci_init)(struct gabs_pbuf_basic *buf)
         };
 }
 
-struct gabs_pbuf_basic_ci GABS_PBUF_IMPL(ci_next)(struct gabs_pbuf_basic_ci it)
+struct gabs_pbuf_basic_ci
+GABS_PBUF_IMPL(gabs_pbuf_ci_next)(struct gabs_pbuf_basic_ci it)
 {
         return (struct gabs_pbuf_basic_ci){
                 .cur = it.cur->next,
@@ -92,18 +95,18 @@ struct gabs_pbuf_basic_ci GABS_PBUF_IMPL(ci_next)(struct gabs_pbuf_basic_ci it)
         };
 }
 
-bool GABS_PBUF_IMPL(ci_eoi)(struct gabs_pbuf_basic_ci it)
+bool GABS_PBUF_IMPL(gabs_pbuf_ci_eoi)(struct gabs_pbuf_basic_ci it)
 {
         return it.cur == NULL;
 }
 
-uint8_t *GABS_PBUF_IMPL(ci_data)(struct gabs_pbuf_basic_ci it)
+uint8_t *GABS_PBUF_IMPL(gabs_pbuf_ci_data)(struct gabs_pbuf_basic_ci it)
 {
         return it.cur->data;
 }
 
-uint8_t *GABS_PBUF_IMPL(ci_reserve_head)(struct gabs_pbuf_basic_ci it,
-                                         size_t bytes)
+uint8_t *GABS_PBUF_IMPL(gabs_pbuf_ci_reserve_head)(struct gabs_pbuf_basic_ci it,
+                                                   size_t bytes)
 {
         uint8_t *data;
         assert(bytes <= gabs_pbuf_ci_headroom(it));
@@ -114,8 +117,8 @@ uint8_t *GABS_PBUF_IMPL(ci_reserve_head)(struct gabs_pbuf_basic_ci it,
         return data;
 }
 
-uint8_t *GABS_PBUF_IMPL(ci_release_head)(struct gabs_pbuf_basic_ci it,
-                                         size_t bytes)
+uint8_t *GABS_PBUF_IMPL(gabs_pbuf_ci_release_head)(struct gabs_pbuf_basic_ci it,
+                                                   size_t bytes)
 {
         uint8_t *data;
 
@@ -128,8 +131,8 @@ uint8_t *GABS_PBUF_IMPL(ci_release_head)(struct gabs_pbuf_basic_ci it,
         return data;
 }
 
-uint8_t *GABS_PBUF_IMPL(ci_reserve_tail)(struct gabs_pbuf_basic_ci it,
-                                         size_t bytes)
+uint8_t *GABS_PBUF_IMPL(gabs_pbuf_ci_reserve_tail)(struct gabs_pbuf_basic_ci it,
+                                                   size_t bytes)
 {
         uint8_t *data;
 
@@ -141,8 +144,8 @@ uint8_t *GABS_PBUF_IMPL(ci_reserve_tail)(struct gabs_pbuf_basic_ci it,
         return data;
 }
 
-uint8_t *GABS_PBUF_IMPL(ci_release_tail)(struct gabs_pbuf_basic_ci it,
-                                         size_t bytes)
+uint8_t *GABS_PBUF_IMPL(gabs_pbuf_ci_release_tail)(struct gabs_pbuf_basic_ci it,
+                                                   size_t bytes)
 {
         assert(bytes <= it.cur->size);
 
@@ -151,7 +154,7 @@ uint8_t *GABS_PBUF_IMPL(ci_release_tail)(struct gabs_pbuf_basic_ci it,
         return it.cur->data + it.cur->size;
 }
 
-size_t GABS_PBUF_IMPL(ci_headroom)(struct gabs_pbuf_basic_ci it)
+size_t GABS_PBUF_IMPL(gabs_pbuf_ci_headroom)(struct gabs_pbuf_basic_ci it)
 {
         uint8_t *base;
 
@@ -164,14 +167,14 @@ size_t GABS_PBUF_IMPL(ci_headroom)(struct gabs_pbuf_basic_ci it)
         return it.cur->data - base;
 }
 
-size_t GABS_PBUF_IMPL(ci_tailroom)(struct gabs_pbuf_basic_ci it)
+size_t GABS_PBUF_IMPL(gabs_pbuf_ci_tailroom)(struct gabs_pbuf_basic_ci it)
 {
         return it.cur->cap - it.cur->size - gabs_pbuf_ci_headroom(it);
 }
 
 struct gabs_pbuf_basic_ci
-GABS_PBUF_IMPL(ci_insert)(struct gabs_pbuf_basic_ci it,
-                          struct gabs_pbuf_basic buf)
+GABS_PBUF_IMPL(gabs_pbuf_ci_insert)(struct gabs_pbuf_basic_ci it,
+                                    struct gabs_pbuf_basic buf)
 {
         struct gabs_pbuf_basic_frag **lastp;
         struct gabs_pbuf_basic_frag *cur;
@@ -191,7 +194,7 @@ GABS_PBUF_IMPL(ci_insert)(struct gabs_pbuf_basic_ci it,
         };
 }
 
-void GABS_PBUF_IMPL(ci_detach)(struct gabs_pbuf_basic_ci it)
+void GABS_PBUF_IMPL(gabs_pbuf_ci_detach)(struct gabs_pbuf_basic_ci it)
 {
         *it.lastp = NULL;
 
@@ -199,7 +202,7 @@ void GABS_PBUF_IMPL(ci_detach)(struct gabs_pbuf_basic_ci it)
 }
 
 struct gabs_pbuf_basic_ci
-GABS_PBUF_IMPL(ci_remove)(struct gabs_pbuf_basic_ci it)
+GABS_PBUF_IMPL(gabs_pbuf_ci_remove)(struct gabs_pbuf_basic_ci it)
 {
         struct gabs_pbuf_basic_frag *buf;
 
@@ -214,12 +217,12 @@ GABS_PBUF_IMPL(ci_remove)(struct gabs_pbuf_basic_ci it)
         return it;
 }
 
-size_t GABS_PBUF_IMPL(ci_size)(struct gabs_pbuf_basic_ci it)
+size_t GABS_PBUF_IMPL(gabs_pbuf_ci_size)(struct gabs_pbuf_basic_ci it)
 {
         return it.cur->size;
 }
 
-size_t GABS_PBUF_IMPL(ci_cap)(struct gabs_pbuf_basic_ci it)
+size_t GABS_PBUF_IMPL(gabs_pbuf_ci_cap)(struct gabs_pbuf_basic_ci it)
 {
         return it.cur->cap;
 }

@@ -19,8 +19,8 @@
 #define GABS_PBUF_CI_TYPE_DEFINE(type_) typedef type_ gabs_pbuf_ci;
 #define GABS_PBUF_TYPE_DEFINE(type_)    typedef type_ gabs_pbuf;
 
-#define GABS_PBUF_IMPL_NAME(x_) GABS_STATIC_IMPL_NAME(pbuf_##x_)
-#define GABS_PBUF_IMPL(x_)      GABS_STATIC_IMPL(pbuf_##x_)
+#define GABS_PBUF_IMPL_NAME(x_) GABS_STATIC_IMPL_NAME(x_)
+#define GABS_PBUF_IMPL(x_)      GABS_STATIC_IMPL(x_)
 
 /* Implementation files may want to both include the definitions directly, and
  * include this file. In that case, we don' want to undef the include macro.

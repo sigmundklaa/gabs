@@ -3,7 +3,7 @@
 #define GABS_PBUF_BASIC_DEF_H__
 
 #ifndef GABS_PBUF_INCLUDE_DEF
-#error __FILE__ should not be included directly
+#error "gabs_pbuf_def.h should not be included directly"
 #endif /* GABS_PBUF_INCLUDE_DEF */
 
 #include <stddef.h>
