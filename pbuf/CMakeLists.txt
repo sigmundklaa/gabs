@@ -8,3 +8,4 @@ gabs_module(
 )
 
 add_subdirectory(basic)
+add_subdirectory(zephyr)
