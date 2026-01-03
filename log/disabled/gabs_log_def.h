@@ -4,8 +4,6 @@
 
 #include <gabs/core/util.h>
 
-#define GABS_LOGGER(name_)
-
 #define gabs_disabled_logf__(fmt_, ...)                                        \
         do {                                                                   \
                 GABS_UNUSED(fmt_);                                             \
