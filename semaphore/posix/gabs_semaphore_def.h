@@ -2,16 +2,16 @@
 #ifndef GABS_SEMAPHORE_POSIX_DEF_H__
 #define GABS_SEMAPHORE_POSIX_DEF_H__
 
+#ifndef GABS_SEMAPHORE_INCLUDE_DEF
+#error "gabs_semaphore_def.h should not be included directly"
+#endif /* GABS_SEMAPHORE_INCLUDE_DEF */
+
 #include <semaphore.h>
 
 #include <gabs/core/util.h>
 #include <gabs/core/api.h>
 
 GABS_BEGIN_DECL
-
-#ifndef GABS_SEMAPHORE_INCLUDE_DEF
-#error "gabs_semaphore_def.h should not be included directly"
-#endif /* GABS_SEMAPHORE_INCLUDE_DEF */
 
 typedef sem_t gabs_sem;
 

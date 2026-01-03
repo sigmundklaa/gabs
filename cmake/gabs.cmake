@@ -31,6 +31,14 @@ define_property(
     "Whether or not to add module to library"
 )
 
+if(NOT GABS_LIBRARY)
+    set(GABS_LIBRARY gabs)
+endif()
+
+if(NOT GABS_IFACE_LIBRARY)
+    set(GABS_IFACE_LIBRARY gabs_iface)
+endif()
+
 function(gabs_require)
     foreach(module ${ARGN})
         set_target_properties(${module} PROPERTIES _GABS_ADD ON)
@@ -89,20 +97,22 @@ function(gabs_module name)
     # Add to interface target
     if(gabs_module_arg_ADD_TO_INTERFACE)
         target_link_libraries(
-            gabs_iface
+            ${GABS_IFACE_LIBRARY}
             INTERFACE
                 $<$<BOOL:$<TARGET_PROPERTY:${name},_GABS_ADD>>:${name}>
         )
     endif()
 endfunction()
 
-function(gabs_select impl)
+function(gabs_provide impl)
     get_target_property(_module ${impl} _GABS_IMPLEMENTS)
-
-    gabs_require(${_module})
 
     get_target_property(_cur_impl ${module} _GABS_IMPL)
     get_target_property(_default_impl ${module} _GABS_DEFAULT_IMPL)
+
+    if(_cur_impl STREQUAL impl)
+        return()
+    endif()
 
     if(NOT _cur_impl STREQUAL _default_impl)
         message(FATAL_ERROR "Module ${module} already has non-default
@@ -110,6 +120,13 @@ function(gabs_select impl)
     endif()
 
     set_target_properties(${module} PROPERTIES _GABS_IMPL ${impl})
+endfunction()
+
+function(gabs_select impl)
+    get_target_property(_module ${impl} _GABS_IMPLEMENTS)
+
+    gabs_require(${_module})
+    gabs_provide(${impl})
 endfunction()
 
 function(gabs_implement impl)

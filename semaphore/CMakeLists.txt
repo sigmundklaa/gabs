@@ -7,3 +7,4 @@ gabs_module(
 )
 
 add_subdirectory(posix)
+add_subdirectory(zephyr)
