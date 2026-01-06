@@ -10,13 +10,6 @@
 
 GABS_BEGIN_DECL
 
-#define GABS_CONFIG_DYN_ALLOC 1
-
-#define GABS_DYN_IMPL_NAME(x_)    impl_##x_##__
-#define GABS_DYN_IMPL(x_)         static GABS_DYN_IMPL_NAME(x_)
-#define GABS_STATIC_IMPL_NAME(x_) x_
-#define GABS_STATIC_IMPL(x_)      GABS_STATIC_IMPL_NAME(x_)
-
 #if GABS_CONFIG_DYN_ALLOC
 #define GABS_ALLOC_IMPL_NAME(x_) GABS_DYN_IMPL_NAME(x_)
 #define GABS_ALLOC_IMPL(x_)      GABS_DYN_IMPL(x_)
