@@ -48,80 +48,8 @@ GABS_BEGIN_DECL
  * @p it_.
  */
 #define gabs_pbuf_ci_foreach(buf_, it_)                                        \
-        for (it_ = gabs_pbuf_ci_init(buf_); !gabs_pbuf_ci_eoi(it_);            \ it_ = gabs_pbuf_ci_next(it_))
-/**
- * @brief Add @p next to chain of buffers, at a byte offset of @p offset.
- *
- * @note Assumes that the buffers are aligned at @p offset. Passing an @p offset
- * that is not zero bytes into a buffer is undefined behaviour.
- */
-GABS_API void gabs_pbuf_chain_at(gabs_pbuf *buf, gabs_pbuf next, size_t offset);
-
-/**
- * @brief Add @p back to the back of the chain poined to by @p buf
- */
-GABS_API void gabs_pbuf_chain_back(gabs_pbuf *buf, gabs_pbuf back);
-
-/**
- * @brief Add @p front to front of buffer chain.
- */
-GABS_API void gabs_pbuf_chain_front(gabs_pbuf *buf, gabs_pbuf front);
-
-/**
- * @brief Create a readonly view around @p buf, offset by @p offset bytes into
- * the buffer, with a size of @p size.
- *
- * @return gabs_pbuf*
- */
-GABS_API gabs_pbuf gabs_pbuf_view(gabs_pbuf buf, size_t offset, size_t size,
-                                  const gabs_allocator_h *alloc);
-
-/**
- * @brief Create a deep copy of @p buf, offset by @p offset bytes with a size
- * of @p size.
- *
- * @return gabs_pbuf*
- */
-GABS_API gabs_pbuf gabs_pbuf_clone(gabs_pbuf buf, size_t offset, size_t size,
-                                   const gabs_allocator_h *alloc);
-
-/**
- * @brief Put @p size from @p mem into the back of the buffer of @p buf.
- *
- * @note This only appends data to the specific buffer given in @p buf, not
- * at the end of the buffer chain.
- */
-GABS_API void gabs_pbuf_put(gabs_pbuf *buf, const uint8_t *mem, size_t size);
-
-/**
- * @brief Strip @p size bytes off the head of the buffer, potentially
- * deallocating now empty sections.
- */
-GABS_API void gabs_pbuf_strip_head(gabs_pbuf *buf, size_t size);
-
-/**
- * @brief Strip @p size bytes off the tail of the buffer, potentially
- * deallocating now empty sections.
- */
-GABS_API void gabs_pbuf_strip_tail(gabs_pbuf *buf, size_t size);
-
-/**
- * @brief Copy @p max_size from an offset of @p offset bytes into @p buf into
- * @p mem.
- *
- * @return size_t Number of copied bytes
- */
-GABS_API size_t gabs_pbuf_copy(gabs_pbuf buf, uint8_t *mem, size_t offset,
-                               size_t max_size);
-
-/** @brief Return the total size of the buffer chain */
-GABS_API size_t gabs_pbuf_size(gabs_pbuf buf);
-
-/** @brief Return number of bytes available at the back of the buffer */
-GABS_API size_t gabs_pbuf_tailroom(gabs_pbuf buf);
-
-/** @brief Return number of bytes available at the front of the buffer */
-GABS_API size_t gabs_pbuf_headroom(gabs_pbuf buf);
+        for (it_ = gabs_pbuf_ci_init(buf_); !gabs_pbuf_ci_eoi(it_);            \
+             it_ = gabs_pbuf_ci_next(it_))
 
 /**
  * @brief Allocate and construct new buffer, with size @p size.
@@ -158,6 +86,80 @@ GABS_API void gabs_pbuf_incref(gabs_pbuf buf);
 
 /** brief Decrease reference counter of buffer, potentially deallocating. */
 GABS_API void gabs_pbuf_decref(gabs_pbuf buf);
+
+/** @brief Return the total size of the buffer chain */
+GABS_API size_t gabs_pbuf_size(gabs_pbuf buf);
+
+/** @brief Return number of bytes available at the back of the buffer */
+GABS_API size_t gabs_pbuf_tailroom(gabs_pbuf buf);
+
+/** @brief Return number of bytes available at the front of the buffer */
+GABS_API size_t gabs_pbuf_headroom(gabs_pbuf buf);
+
+/**
+ * @brief Create a readonly view around @p buf, offset by @p offset bytes into
+ * the buffer, with a size of @p size.
+ *
+ * @return gabs_pbuf*
+ */
+GABS_API gabs_pbuf gabs_pbuf_view(gabs_pbuf buf, size_t offset, size_t size,
+                                  const gabs_allocator_h *alloc);
+
+/**
+ * @brief Create a deep copy of @p buf, offset by @p offset bytes with a size
+ * of @p size.
+ *
+ * @return gabs_pbuf*
+ */
+GABS_API gabs_pbuf gabs_pbuf_clone(gabs_pbuf buf, size_t offset, size_t size,
+                                   const gabs_allocator_h *alloc);
+
+/**
+ * @brief Add @p next to chain of buffers, at a byte offset of @p offset.
+ *
+ * @note Assumes that the buffers are aligned at @p offset. Passing an @p offset
+ * that is not zero bytes into a buffer is undefined behaviour.
+ */
+GABS_API void gabs_pbuf_chain_at(gabs_pbuf *buf, gabs_pbuf next, size_t offset);
+
+/**
+ * @brief Add @p back to the back of the chain poined to by @p buf
+ */
+GABS_API void gabs_pbuf_chain_back(gabs_pbuf *buf, gabs_pbuf back);
+
+/**
+ * @brief Add @p front to front of buffer chain.
+ */
+GABS_API void gabs_pbuf_chain_front(gabs_pbuf *buf, gabs_pbuf front);
+
+/**
+ * @brief Put @p size from @p mem into the back of the buffer of @p buf.
+ *
+ * @note This only appends data to the specific buffer given in @p buf, not
+ * at the end of the buffer chain.
+ */
+GABS_API void gabs_pbuf_put(gabs_pbuf *buf, const uint8_t *mem, size_t size);
+
+/**
+ * @brief Strip @p size bytes off the head of the buffer, potentially
+ * deallocating now empty sections.
+ */
+GABS_API void gabs_pbuf_strip_head(gabs_pbuf *buf, size_t size);
+
+/**
+ * @brief Strip @p size bytes off the tail of the buffer, potentially
+ * deallocating now empty sections.
+ */
+GABS_API void gabs_pbuf_strip_tail(gabs_pbuf *buf, size_t size);
+
+/**
+ * @brief Copy @p max_size from an offset of @p offset bytes into @p buf into
+ * @p mem.
+ *
+ * @return size_t Number of copied bytes
+ */
+GABS_API size_t gabs_pbuf_copy(gabs_pbuf buf, uint8_t *mem, size_t offset,
+                               size_t max_size);
 
 /**
  * @defgroup gabs_pbuf_ci Contiguous iterators
