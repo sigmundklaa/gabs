@@ -10,14 +10,6 @@ define_property(
 define_property(
     TARGET
     PROPERTY
-        _GABS_DEFAULT_IMPL
-    BRIEF_DOCS
-        "Default implementation used for module if none other is specified"
-)
-
-define_property(
-    TARGET
-    PROPERTY
         _GABS_IMPL
     BRIEF_DOCS
         "Currently selected implementation"
@@ -55,8 +47,8 @@ endfunction()
 
 function(gabs_module name)
     set(_options ADD_ALWAYS ADD_TO_INTERFACE ALLOW_MANY)
-    set(_vargs DEFAULT)
-    set(_mvargs REQUIRES)
+    set(_vargs "")
+    set(_mvargs REQUIRES DEFAULT)
     cmake_parse_arguments(
         gabs_module_arg
         "${_options}"
@@ -109,27 +101,23 @@ function(gabs_module name)
     set_target_properties(
         ${name}
         PROPERTIES
-            _GABS_DEFAULT_IMPL ${gabs_module_arg_DEFAULT}
-            _GABS_IMPL ${gabs_module_arg_DEFAULT}
+            _GABS_IMPL ""
             _GABS_ALLOW_MANY ${gabs_module_arg_ALLOW_MANY}
     )
 
     # Link implementation to module, if it has been defined.
     set(_impl_exp "$<TARGET_PROPERTY:${name},_GABS_IMPL>")
     set(_impl_exp_bool "$<BOOL:${_impl_exp}>")
-    target_link_libraries(
-        ${name}
-        INTERFACE
-            "$<${_impl_exp_bool}:${_impl_exp}>"
-    )
+    set(_impl "$<IF:${_impl_exp_bool},${_impl_exp},${gabs_module_arg_DEFAULT}>")
+    target_link_libraries(${name} INTERFACE "$<$<BOOL:${_impl}>:${_impl}>")
 
     # Link implementation interface to this interface, if the implementation
     # has been specified.
-    set(_impl_iface_exp "$<LIST:TRANSFORM,${_impl_exp},APPEND,_iface>")
+    set(_impl_iface "$<LIST:TRANSFORM,${_impl},APPEND,_iface>")
     target_link_libraries(
         ${name}_iface
         INTERFACE
-            "$<${_impl_exp_bool}:${_impl_iface_exp}>"
+            "$<$<BOOL:${_impl}>:${_impl_iface}>"
     )
 
     # Add to gabs library if the add property, in the generator stage, says to
@@ -160,18 +148,6 @@ function(gabs_provide impl)
         set_property(TARGET ${_module} APPEND PROPERTY _GABS_IMPL ${impl})
 
         return()
-    endif()
-
-    get_target_property(_cur_impl ${_module} _GABS_IMPL)
-    get_target_property(_default_impl ${_module} _GABS_DEFAULT_IMPL)
-
-    if(_cur_impl STREQUAL impl)
-        return()
-    endif()
-
-    if(NOT _cur_impl STREQUAL _default_impl)
-        message(FATAL_ERROR "Module ${_module} already has non-default
-            implementation specified (${_default_impl})")
     endif()
 
     set_target_properties(${_module} PROPERTIES _GABS_IMPL ${impl})
