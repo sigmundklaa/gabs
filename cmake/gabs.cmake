@@ -26,6 +26,14 @@ define_property(
 define_property(
     TARGET
     PROPERTY
+        _GABS_ALLOW_MANY
+    BRIEF_DOCS
+        "Allow multiple implementations"
+)
+
+define_property(
+    TARGET
+    PROPERTY
         _GABS_ADD
     BRIEF_DOCS
         "Whether or not to add module to library"
@@ -46,7 +54,7 @@ function(gabs_require)
 endfunction()
 
 function(gabs_module name)
-    set(_options ADD_ALWAYS ADD_TO_INTERFACE)
+    set(_options ADD_ALWAYS ADD_TO_INTERFACE ALLOW_MANY)
     set(_vargs DEFAULT)
     set(_mvargs REQUIRES)
     cmake_parse_arguments(
@@ -103,12 +111,25 @@ function(gabs_module name)
         PROPERTIES
             _GABS_DEFAULT_IMPL ${gabs_module_arg_DEFAULT}
             _GABS_IMPL ${gabs_module_arg_DEFAULT}
+            _GABS_ALLOW_MANY ${gabs_module_arg_ALLOW_MANY}
     )
 
+    # Link implementation to module, if it has been defined.
+    set(_impl_exp "$<TARGET_PROPERTY:${name},_GABS_IMPL>")
+    set(_impl_exp_bool "$<BOOL:${_impl_exp}>")
     target_link_libraries(
         ${name}
         INTERFACE
-            $<TARGET_PROPERTY:${name},_GABS_IMPL>
+            "$<${_impl_exp_bool}:${_impl_exp}>"
+    )
+
+    # Link implementation interface to this interface, if the implementation
+    # has been specified.
+    set(_impl_iface_exp "$<LIST:TRANSFORM,${_impl_exp},APPEND,_iface>")
+    target_link_libraries(
+        ${name}_iface
+        INTERFACE
+            "$<${_impl_exp_bool}:${_impl_iface_exp}>"
     )
 
     # Add to gabs library if the add property, in the generator stage, says to
@@ -119,13 +140,6 @@ function(gabs_module name)
         ${GABS_LIBRARY}
         PRIVATE
             "$<${_is_added_bool}:${name}>"
-    )
-
-    # Link implementation interface to this interface.
-    target_link_libraries(
-        ${name}_iface
-        INTERFACE
-            "$<TARGET_PROPERTY:${name},_GABS_IMPL>_iface"
     )
 
     # Add to interface target if _ADD=ON
@@ -140,6 +154,13 @@ endfunction()
 
 function(gabs_provide impl)
     get_target_property(_module ${impl} _GABS_IMPLEMENTS)
+
+    get_target_property(_allow_many ${_module} _GABS_ALLOW_MANY)
+    if(_allow_many)
+        set_property(TARGET ${_module} APPEND PROPERTY _GABS_IMPL ${impl})
+
+        return()
+    endif()
 
     get_target_property(_cur_impl ${_module} _GABS_IMPL)
     get_target_property(_default_impl ${_module} _GABS_DEFAULT_IMPL)
