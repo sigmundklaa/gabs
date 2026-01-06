@@ -35,8 +35,8 @@ struct gabs_pbuf_basic_ci {
         struct gabs_pbuf_basic_frag *cur;
 };
 
-GABS_PBUF_CI_TYPE_DEFINE(struct gabs_pbuf_basic_ci);
-GABS_PBUF_TYPE_DEFINE(struct gabs_pbuf_basic);
+typedef struct gabs_pbuf_basic gabs_pbuf;
+typedef struct gabs_pbuf_basic_ci gabs_pbuf_ci;
 
 GABS_END_DECL
 

@@ -33,8 +33,8 @@ GABS_INLINE struct gabs_pbuf_zephyr gabs_pbuf_from_zephyr(struct net_buf *buf)
         return (struct gabs_pbuf_zephyr){buf};
 }
 
-GABS_PBUF_TYPE_DEFINE(struct gabs_pbuf_zephyr);
-GABS_PBUF_CI_TYPE_DEFINE(struct gabs_pbuf_zephyr_ci);
+typedef struct gabs_pbuf_zephyr gabs_pbuf;
+typedef struct gabs_pbuf_zephyr_ci gabs_pbuf_ci;
 
 GABS_END_DECL
 
