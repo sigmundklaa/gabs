@@ -28,7 +28,7 @@ define_property(
     PROPERTY
         _GABS_ADD
     BRIEF_DOCS
-    "Whether or not to add module to library"
+        "Whether or not to add module to library"
 )
 
 if(NOT GABS_LIBRARY)
@@ -48,7 +48,7 @@ endfunction()
 function(gabs_module name)
     set(_options ADD_ALWAYS ADD_TO_INTERFACE)
     set(_vargs DEFAULT)
-    set(_mvargs REQUIRED)
+    set(_mvargs REQUIRES)
     cmake_parse_arguments(
         gabs_module_arg
         "${_options}"
@@ -57,7 +57,21 @@ function(gabs_module name)
         ${ARGN}
     )
 
+    # Slightly confusing distinction: _iface libraries are meant to be
+    # used as a typical interface library, that is, headers, compile
+    # options and such. While the library without the prefix is of type
+    # INTERFACE, it should be treated as a source library as this is what
+    # should contain the sources that will be compiled in the ${GABS_LIBRARY}
+    # target.
     add_library(${name} INTERFACE)
+    add_library(${name}_iface INTERFACE)
+
+    target_link_libraries(
+        ${name}
+        INTERFACE
+            ${GABS_IFACE_LIBRARY}
+            ${name}_iface
+    )
 
     if(gabs_module_arg_ADD_ALWAYS)
         gabs_require(${name})
@@ -69,8 +83,19 @@ function(gabs_module name)
         )
     endif()
 
-    if(gabs_module_arg_REQUIRED)
-        gabs_require(${gabs_module_arg_REQUIRED})
+    # Link dependencies
+    if(gabs_module_arg_REQUIRES)
+        target_link_libraries(${name} INTERFACE ${gabs_module_arg_REQUIRES})
+
+        list(
+            TRANSFORM
+                ${gabs_module_arg_REQUIRES}
+            APPEND
+                _iface
+            OUTPUT_VARIABLE
+                ifaces
+        )
+        target_link_libraries(${name}_iface INTERFACE ${ifaces})
     endif()
 
     set_target_properties(
@@ -86,20 +111,29 @@ function(gabs_module name)
             $<TARGET_PROPERTY:${name},_GABS_IMPL>
     )
 
-    # Add to gabs library if the add property, at runtime, says to do so.
-    # Otherwise this module will not be used.
+    # Add to gabs library if the add property, in the generator stage, says to
+    # do so. Otherwise this module will not be used.
+    set(_is_added "$<TARGET_PROPERTY:${name},_GABS_ADD>")
+    set(_is_added_bool "$<BOOL:${_is_added}>")
     target_link_libraries(
-        gabs
+        ${GABS_LIBRARY}
         PRIVATE
-            $<$<BOOL:$<TARGET_PROPERTY:${name},_GABS_ADD>>:${name}>
+            "$<${_is_added_bool}:${name}>"
     )
 
-    # Add to interface target
+    # Link implementation interface to this interface.
+    target_link_libraries(
+        ${name}_iface
+        INTERFACE
+            "$<TARGET_PROPERTY:${name},_GABS_IMPL>_iface"
+    )
+
+    # Add to interface target if _ADD=ON
     if(gabs_module_arg_ADD_TO_INTERFACE)
         target_link_libraries(
             ${GABS_IFACE_LIBRARY}
             INTERFACE
-                $<$<BOOL:$<TARGET_PROPERTY:${name},_GABS_ADD>>:${name}>
+                "$<${_is_added_bool}:${name}_iface>"
         )
     endif()
 endfunction()
@@ -107,19 +141,19 @@ endfunction()
 function(gabs_provide impl)
     get_target_property(_module ${impl} _GABS_IMPLEMENTS)
 
-    get_target_property(_cur_impl ${module} _GABS_IMPL)
-    get_target_property(_default_impl ${module} _GABS_DEFAULT_IMPL)
+    get_target_property(_cur_impl ${_module} _GABS_IMPL)
+    get_target_property(_default_impl ${_module} _GABS_DEFAULT_IMPL)
 
     if(_cur_impl STREQUAL impl)
         return()
     endif()
 
     if(NOT _cur_impl STREQUAL _default_impl)
-        message(FATAL_ERROR "Module ${module} already has non-default
+        message(FATAL_ERROR "Module ${_module} already has non-default
             implementation specified (${_default_impl})")
     endif()
 
-    set_target_properties(${module} PROPERTIES _GABS_IMPL ${impl})
+    set_target_properties(${_module} PROPERTIES _GABS_IMPL ${impl})
 endfunction()
 
 function(gabs_select impl)
@@ -129,20 +163,55 @@ function(gabs_select impl)
     gabs_provide(${impl})
 endfunction()
 
+macro(gabs_get_iface var name)
+    set(${var} ${name}_iface)
+endmacro()
+
+macro(gabs_get_lib var name)
+    set(${var} ${name})
+endmacro()
+
+function(gabs_include name)
+    gabs_get_iface(_lib ${name})
+
+    target_include_directories(${_lib} INTERFACE ${ARGN})
+endfunction()
+
+function(gabs_sources name)
+    gabs_get_lib(_lib ${name})
+
+    target_sources(${_lib} INTERFACE ${ARGN})
+endfunction()
+
 function(gabs_implement impl)
     set(_vargs IMPLEMENTS)
-    cmake_parse_arguments(gabs_implement_arg "" "${_vargs}" "" ${ARGN})
+    set(_mvargs INCLUDE SOURCES)
+    cmake_parse_arguments(
+        gabs_implement_arg
+        ""
+        "${_vargs}"
+        "${_mvargs}"
+        ${ARGN}
+    )
 
     if(NOT gabs_implement_arg_IMPLEMENTS)
         message(FATAL_ERROR "IMPLEMENTS keyword is required")
     endif()
 
     add_library(${impl} INTERFACE)
+    add_library(${impl}_iface INTERFACE)
 
     set_target_properties(
         ${impl}
         PROPERTIES
             _GABS_IMPLEMENTS ${gabs_implement_arg_IMPLEMENTS}
     )
-endfunction()
 
+    if(gabs_implement_arg_SOURCES)
+        gabs_sources(${impl} ${gabs_implement_arg_SOURCES})
+    endif()
+
+    if(gabs_implement_arg_INCLUDE)
+        gabs_include(${impl} ${gabs_implement_arg_INCLUDE})
+    endif()
+endfunction()

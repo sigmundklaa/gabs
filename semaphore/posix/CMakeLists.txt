@@ -1,6 +1,13 @@
 
-gabs_implement(gabs-semaphore-posix IMPLEMENTS gabs-semaphore)
+gabs_implement(
+    gabs-semaphore-posix
+    IMPLEMENTS
+        gabs-semaphore
+    INCLUDE
+        .
+    SOURCES
+        semaphore_posix.c
+)
 
-target_include_directories(gabs-semaphore-posix INTERFACE .)
-target_sources(gabs-semaphore-posix INTERFACE semaphore_posix.c)
-target_link_libraries(gabs-semaphore-posix INTERFACE gabs-contrib-posix)
+gabs_get_lib(_lib gabs-semaphore-posix)
+target_link_libraries(${_lib} INTERFACE gabs-contrib-posix)
