@@ -5,6 +5,8 @@ gabs_module(
     ALLOW_MANY
 )
 
+add_subdirectory(zephyr)
+
 gabs_implement(gabs-alloc-std IMPLEMENTS gabs-alloc SOURCES std.c)
 gabs_implement(gabs-alloc-dynamic IMPLEMENTS gabs-alloc SOURCES dynamic.c)
 
