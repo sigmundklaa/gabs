@@ -6,10 +6,11 @@
 struct gabs_pbuf_zephyr gabs_pbuf_new(const gabs_allocator_h *alloc,
                                       size_t size)
 {
+        int status;
         struct net_buf *buf;
 
-        buf = gabs_alloc(alloc, size);
-        if (buf == NULL) {
+        status = gabs_alloc(alloc, size, (void**)&buf);
+        if (status != 0) {
                 assert(0);
                 return (struct gabs_pbuf_zephyr){0};
         }
