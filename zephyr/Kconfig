@@ -1,0 +1,9 @@
+
+config GABS
+    bool "Enable GABS"
+    default y
+
+config APP_LINK_WITH_GABS_IFACE
+    bool "Link application with GABS interface library"
+    default y
+    depends on GABS

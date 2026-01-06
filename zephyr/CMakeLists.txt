@@ -1,7 +1,14 @@
 
 zephyr_library_named(gabs)
 
-zephyr_interface_library_named(gabs_iface INTERFACE)
+zephyr_interface_library_named(gabs_iface)
+target_include_directories(
+    gabs_iface
+    INTERFACE
+        ${ZEPHYR_CURRENT_MODULE_DIR}/include
+)
+
+zephyr_library_sources(dummy.c)
 zephyr_library_link_libraries(gabs_iface)
 
 include(${ZEPHYR_CURRENT_MODULE_DIR}/cmake/gabs.cmake)
@@ -21,5 +28,6 @@ add_oot_subdirectory(semaphore)
 gabs_provide(gabs-compiler-gcc)
 gabs_provide(gabs-alloc-dynamic)
 gabs_provide(gabs-log-zephyr)
+gabs_provide(gabs-pbuf-zephyr)
 gabs_provide(gabs-mutex-zephyr)
 gabs_provide(gabs-semaphore-zephyr)
