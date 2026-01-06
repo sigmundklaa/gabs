@@ -3,6 +3,8 @@ gabs_module(
     gabs-alloc
     ADD_TO_INTERFACE
     ALLOW_MANY
+    DEFAULT
+        gabs-alloc-dynamic
 )
 
 add_subdirectory(zephyr)
