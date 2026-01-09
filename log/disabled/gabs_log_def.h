@@ -3,9 +3,13 @@
 #define GABS_LOG_DISABLED_DEF_H__
 
 #include <gabs/core/util.h>
+#include <gabs/core/handle.h>
 
-#define gabs_disabled_logf__(fmt_, ...)                                        \
+typedef gabs_handle gabs_logger_h;
+
+#define gabs_disabled_logf__(handle_, fmt_, ...)                               \
         do {                                                                   \
+                GABS_UNUSED(handle_);                                          \
                 GABS_UNUSED(fmt_);                                             \
         } while (0)
 

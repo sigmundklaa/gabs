@@ -1,10 +1,11 @@
 /**
  * The log implementation must provide a `gabs_log_def.h` header, which defines
- * the following macros/functions:
- * - `gabs_log_dbgf(fmt_, ...)`
- * - `gabs_log_inff(fmt_, ...)`
- * - `gabs_log_wrnf(fmt_, ...)`
- * - `gabs_log_errf(fmt_, ...)`
+ * the following types/macros/functions:
+ * - `gabs_logger_h`
+ * - `gabs_log_dbgf(gabs_logger_h handle_, const char* fmt_, ...)`
+ * - `gabs_log_inff(gabs_logger_h handle_, const char* fmt_, ...)`
+ * - `gabs_log_wrnf(gabs_logger_h handle_, const char* fmt_, ...)`
+ * - `gabs_log_errf(gabs_logger_h handle_, const char* fmt_, ...)`
  */
 
 #ifndef GABS_LOG_H__
