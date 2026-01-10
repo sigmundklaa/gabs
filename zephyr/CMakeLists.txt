@@ -24,6 +24,7 @@ add_oot_subdirectory(pbuf)
 add_oot_subdirectory(log)
 add_oot_subdirectory(mutex)
 add_oot_subdirectory(semaphore)
+add_oot_subdirectory(contrib/zephyr)
 
 gabs_provide(gabs-compiler-gcc)
 gabs_provide(gabs-alloc-dynamic)

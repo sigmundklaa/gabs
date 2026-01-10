@@ -10,7 +10,7 @@ target_link_libraries(gabs PUBLIC gabs_iface)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/gabs.cmake)
 
-add_subdirectory(contrib)
+add_subdirectory(contrib/posix)
 add_subdirectory(compiler)
 add_subdirectory(alloc)
 add_subdirectory(pbuf)
