@@ -26,6 +26,9 @@ GABS_BEGIN_DECL
         ((type_ *)gabs_int_as_ptr__(gabs_ptr_as_int__(ptr_) -                  \
                                     gabs_offset_of(type_, member_)))
 
+#define gabs_min(a, b) (((a) < (b)) ? (a) : (b))
+#define gabs_max(a, b) (((a) > (b)) ? (a) : (b))
+
 GABS_END_DECL
 
 #endif /* GABS_CORE_UTIL_H__ */
