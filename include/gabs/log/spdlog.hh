@@ -22,7 +22,6 @@ class spdlog_logger
                               spdlog::default_logger())
                 : logger_(logger)
         {
-                ::gabs_handle_init(&handle_);
         }
 
         const std::shared_ptr<::spdlog::logger> &logger() const
