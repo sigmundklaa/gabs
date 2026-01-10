@@ -31,21 +31,21 @@ void gabs_log_spdlog_impl__(const gabs_logger_h *handle,
                 if (handle_) {                                                 \
                         gabs_log_spdlog_impl__(handle_, level_, __FILE__,      \
                                                __func__, __LINE__,             \
-                                               __VA_ARGS__)                    \
+                                               __VA_ARGS__);                   \
                 }                                                              \
         } while (0)
 
 #define gabs_log_dbgf(handle_, ...)                                            \
-        gabs_log_spdlog_logf__(handle_, GABS_LOG_SPDLOG_DEBUG__, __VA_ARGS__)
+        gabs_log_spdlog__(handle_, GABS_LOG_SPDLOG_DEBUG__, __VA_ARGS__)
 
 #define gabs_log_inff(handle_, ...)                                            \
-        gabs_log_spdlog_logf__(handle_, GABS_LOG_SPDLOG_INFO__, __VA_ARGS__)
+        gabs_log_spdlog__(handle_, GABS_LOG_SPDLOG_INFO__, __VA_ARGS__)
 
 #define gabs_log_wrnf(handle_, ...)                                            \
-        gabs_log_spdlog_logf__(handle_, GABS_LOG_SPDLOG_WRN__, __VA_ARGS__)
+        gabs_log_spdlog__(handle_, GABS_LOG_SPDLOG_WARN__, __VA_ARGS__)
 
 #define gabs_log_errf(handle_, ...)                                            \
-        gabs_log_spdlog_logf__(handle_, GABS_LOG_SPDLOG_ERR__, __VA_ARGS__)
+        gabs_log_spdlog__(handle_, GABS_LOG_SPDLOG_ERROR__, __VA_ARGS__)
 
 GABS_END_DECL
 
