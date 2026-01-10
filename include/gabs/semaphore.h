@@ -7,6 +7,7 @@
 
 #include <gabs/core/util.h>
 #include <gabs/core/api.h>
+#include <gabs/common.h>
 
 GABS_BEGIN_DECL
 
