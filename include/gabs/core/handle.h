@@ -7,7 +7,11 @@
 
 GABS_BEGIN_DECL
 
-typedef char gabs_handle;
+/* TODO: Zero length array */
+#define gabs_handle                                                            \
+        struct {                                                               \
+                char unused;                                                   \
+        }
 
 GABS_END_DECL
 
