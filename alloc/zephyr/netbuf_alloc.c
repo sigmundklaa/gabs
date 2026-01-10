@@ -7,8 +7,8 @@ get_container(const gabs_dyn_allocator *alloc)
         return gabs_container_of(alloc, struct gabs_alloc_zephyr_netbuf, dyn);
 }
 
-int GABS_ALLOC_IMPL(gabs_alloc)(const gabs_allocator_h *alloc, size_t size,
-                                void **mem)
+int GABS_DYN_ALLOC_IMPL(zephyr_netbuf, alloc)(const gabs_allocator_h *alloc,
+                                              size_t size, void **mem)
 {
         struct net_buf *buf;
         struct gabs_alloc_zephyr_netbuf *container;
@@ -24,17 +24,9 @@ int GABS_ALLOC_IMPL(gabs_alloc)(const gabs_allocator_h *alloc, size_t size,
         return 0;
 }
 
-int GABS_ALLOC_IMPL(gabs_dealloc)(const gabs_allocator_h *alloc, void *mem)
+int GABS_DYN_ALLOC_IMPL(zephyr_netbuf, dealloc)(const gabs_allocator_h *alloc,
+                                                void *mem)
 {
         __ASSERT(0, "Buffer should never be deallocated through gabs_dealloc");
         return -ENOTSUP;
-}
-
-void gabs_alloc_zephyr_netbuf_init(gabs_alloc_zephyr_netbuf *alloc,
-                                   struct net_buf_pool *pool)
-{
-        alloc->pool = pool;
-
-        gabs_dyn_allocator_init(&alloc->dyn, GABS_ALLOC_IMPL_NAME(gabs_alloc),
-                                GABS_ALLOC_IMPL_NAME(gabs_dealloc));
 }

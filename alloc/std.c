@@ -5,8 +5,8 @@
 #include <gabs/alloc/dynamic.h>
 #include <gabs/alloc/std.h>
 
-int GABS_ALLOC_IMPL(gabs_alloc)(const gabs_allocator_h *allocator, size_t size,
-                                void **mem)
+int GABS_DYN_ALLOC_IMPL(std, alloc)(const gabs_allocator_h *allocator,
+                                    size_t size, void **mem)
 {
         GABS_UNUSED(allocator);
 
@@ -18,7 +18,8 @@ int GABS_ALLOC_IMPL(gabs_alloc)(const gabs_allocator_h *allocator, size_t size,
         return 0;
 }
 
-int GABS_ALLOC_IMPL(gabs_dealloc)(const gabs_allocator_h *allocator, void *mem)
+int GABS_DYN_ALLOC_IMPL(std, dealloc)(const gabs_allocator_h *allocator,
+                                      void *mem)
 {
         GABS_UNUSED(allocator);
 
@@ -29,11 +30,7 @@ int GABS_ALLOC_IMPL(gabs_dealloc)(const gabs_allocator_h *allocator, void *mem)
 #ifdef GABS_CONFIG_DYN_ALLOC
 const gabs_allocator_h *gabs_std_allocator(void)
 {
-        static const gabs_dyn_allocator allocator = {
-                .alloc = GABS_ALLOC_IMPL_NAME(gabs_alloc),
-                .dealloc = GABS_ALLOC_IMPL_NAME(gabs_dealloc),
-        };
-
-        return gabs_dyn_allocator_handle(&allocator);
+        static const gabs_dyn_allocator allocator = GABS_DYN_ALLOC_INIT(std);
+        return GABS_DYN_ALLOC_HANDLE(&allocator);
 }
 #endif

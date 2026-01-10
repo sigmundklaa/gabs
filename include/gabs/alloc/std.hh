@@ -32,9 +32,12 @@ template <template <class> class BaseAllocator = std::allocator> class allocator
         allocator(const std::shared_ptr<BaseAllocator<value_type>> &underlying)
                 : underlying_(underlying)
         {
-                ::gabs_dyn_allocator_init(&dynamic_,
-                                          detail::do_alloc<allocator>,
-                                          detail::do_dealloc<allocator>);
+                using GABS_DYN_ALLOC_IMPL(std_cc, alloc) =
+                        detail::do_alloc<allocator>;
+                using GABS_DYN_ALLOC_IMPL(std_cc, dealloc) =
+                        detail::do_dealloc<allocator>;
+
+                dynamic_ = GABS_DYN_ALLOC_INIT(std_cc);
         }
 
         allocator() : allocator(std::make_shared<BaseAllocator<value_type>>())
@@ -48,7 +51,7 @@ template <template <class> class BaseAllocator = std::allocator> class allocator
 
         const ::gabs_allocator_h *handle() const
         {
-                return ::gabs_dyn_allocator_handle(&dynamic_);
+                return GABS_DYN_ALLOC_HANDLE(&dynamic_);
         }
 
         static allocator *from_handle(const ::gabs_allocator_h *handle)

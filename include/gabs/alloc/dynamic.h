@@ -17,28 +17,32 @@ struct gabs_dyn_allocator {
         gabs_allocator_h handle;
 };
 
-void gabs_dyn_allocator_init__(struct gabs_dyn_allocator *allocator,
-                               gabs_dyn_allocator_alloc alloc,
-                               gabs_dyn_allocator_dealloc dealloc);
+#define GABS_DYN_ALLOC_IMPL(impl_, method_)                                    \
+        gabs_impl_dyn_alloc_##method_##_##impl_##__
 
-#define gabs_dyn_allocator_init(allocator_, alloc_, dealloc_)                  \
-        gabs_dyn_allocator_init__(allocator_, alloc_, dealloc_)
+#define GABS_DYN_ALLOC_INIT(impl_)                                             \
+        (struct gabs_dyn_allocator)                                            \
+        {                                                                      \
+                .alloc = GABS_DYN_ALLOC_IMPL(impl_, alloc),                    \
+                .dealloc = GABS_DYN_ALLOC_IMPL(impl_, dealloc),                \
+        }
+
 #else
 struct gabs_dyn_allocator {
         gabs_allocator_h handle;
 };
 
-#define gabs_dyn_allocator_init(allocator_, alloc_, dealloc_)                  \
-        gabs_handle_init(&(allocator_)->handle)
+#define GABS_DYN_ALLOC_IMPL(impl_, method_) gabs_##method_
+
+#define GABS_DYN_ALLOC_INIT(impl_)                                             \
+        (struct gabs_dyn_allocator)                                            \
+        {                                                                      \
+        }
 #endif
 
 typedef struct gabs_dyn_allocator gabs_dyn_allocator;
 
-static inline const gabs_allocator_h *
-gabs_dyn_allocator_handle(const struct gabs_dyn_allocator *allocator)
-{
-        return &allocator->handle;
-}
+#define GABS_DYN_ALLOC_HANDLE(alloc_) (&(alloc_)->handle)
 
 static inline const struct gabs_dyn_allocator *
 gabs_dyn_allocator_get(const gabs_allocator_h *handle)
