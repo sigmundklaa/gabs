@@ -10,14 +10,6 @@
 
 GABS_BEGIN_DECL
 
-#if GABS_CONFIG_DYN_ALLOC
-#define GABS_ALLOC_IMPL_NAME(x_) GABS_DYN_IMPL_NAME(x_)
-#define GABS_ALLOC_IMPL(x_)      GABS_DYN_IMPL(x_)
-#else
-#define GABS_ALLOC_IMPL_NAME(x_) GABS_STATIC_IMPL_NAME(x_)
-#define GABS_ALLOC_IMPL(x_)      GABS_STATIC_IMPL(x_)
-#endif
-
 typedef gabs_handle gabs_allocator_h;
 
 GABS_API int gabs_alloc(const gabs_allocator_h *allocator, size_t size,
