@@ -27,8 +27,13 @@ void gabs_log_spdlog_impl__(const gabs_logger_h *handle,
                             const char *fmt, ...);
 
 #define gabs_log_spdlog__(handle_, level_, ...)                                \
-        gabs_log_spdlog_impl__(handle_, level_, __FILE__, __func__, __LINE__,  \
-                               __VA_ARGS__)
+        do {                                                                   \
+                if (handle_) {                                                 \
+                        gabs_log_spdlog_impl__(handle_, level_, __FILE__,      \
+                                               __func__, __LINE__,             \
+                                               __VA_ARGS__)                    \
+                }                                                              \
+        } while (0)
 
 #define gabs_log_dbgf(handle_, ...)                                            \
         gabs_log_spdlog_logf__(handle_, GABS_LOG_SPDLOG_DEBUG__, __VA_ARGS__)

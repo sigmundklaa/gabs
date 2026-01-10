@@ -29,6 +29,9 @@ struct gabs_log_zephyr_data {
 
 #define gabs_log_zephyr__(handle_, level_, ...)                                \
         do {                                                                   \
+                if (!handle_) {                                                \
+                        break;                                                 \
+                }                                                              \
                 /* Needs to be set, just set to  lowest possible.  Filtering   \
                    is primarily done by the level of the logging instance. */  \
                 LOG_LEVEL_SET(LOG_LEVEL_DBG);                                  \
