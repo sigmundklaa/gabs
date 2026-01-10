@@ -13,7 +13,7 @@ int GABS_DYN_ALLOC_IMPL(zephyr_netbuf, alloc)(const gabs_allocator_h *alloc,
         struct net_buf *buf;
         struct gabs_alloc_zephyr_netbuf *container;
 
-        container = get_container(gabs_dyn_allocator_get(alloc));
+        container = get_container(GABS_DYN_ALLOC_GET(alloc));
         buf = net_buf_alloc_len(container->pool, size, K_NO_WAIT);
 
         if (buf == NULL) {

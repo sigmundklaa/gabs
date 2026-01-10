@@ -44,11 +44,8 @@ typedef struct gabs_dyn_allocator gabs_dyn_allocator;
 
 #define GABS_DYN_ALLOC_HANDLE(alloc_) (&(alloc_)->handle)
 
-static inline const struct gabs_dyn_allocator *
-gabs_dyn_allocator_get(const gabs_allocator_h *handle)
-{
-        return gabs_container_of(handle, struct gabs_dyn_allocator, handle);
-}
+#define GABS_DYN_ALLOC_GET(handle_)                                            \
+        gabs_container_of(handle_, struct gabs_dyn_allocator, handle)
 
 GABS_END_DECL
 

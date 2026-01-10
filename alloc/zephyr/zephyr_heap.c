@@ -12,7 +12,7 @@ int GABS_DYN_ALLOC_IMPL(zephyr_heap, alloc)(const gabs_allocator_h *alloc,
 {
         struct gabs_alloc_zephyr_heap *container;
 
-        container = get_container(gabs_dyn_allocator_get(alloc));
+        container = get_container(GABS_DYN_ALLOC_GET(alloc));
         *mem = k_heap_alloc(container->heap, size, K_NO_WAIT);
 
         if (*mem == NULL) {
@@ -27,7 +27,7 @@ int GABS_DYN_ALLOC_IMPL(zephyr_heap, dealloc)(const gabs_allocator_h *alloc,
 {
         struct gabs_alloc_zephyr_heap *container;
 
-        container = get_container(gabs_dyn_allocator_get(alloc));
+        container = get_container(GABS_DYN_ALLOC_GET(alloc));
         k_heap_free(container->heap, mem);
 
         return 0;

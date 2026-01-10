@@ -56,7 +56,7 @@ template <template <class> class BaseAllocator = std::allocator> class allocator
 
         static allocator *from_handle(const ::gabs_allocator_h *handle)
         {
-                auto dyn = ::gabs_dyn_allocator_get(handle);
+                auto dyn = GABS_DYN_ALLOC_GET(handle);
                 return gabs_container_of(dyn, allocator, dynamic_);
         }
 
