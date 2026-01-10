@@ -29,21 +29,19 @@ class spdlog_logger
                 return logger_;
         }
 
-        /* Internal handle type is `gabs_handle`, and `gabs_log_def.h` defines
-         * `gabs_logger_h` as `const gabs_handle*`. */
-        ::gabs_logger_h handle() const
+        const ::gabs_logger_h *handle() const
         {
                 return &handle_;
         }
 
-        static spdlog_logger *from_handle(::gabs_logger_h h)
+        static spdlog_logger *from_handle(const ::gabs_logger_h *h)
         {
                 return gabs_container_of(h, spdlog_logger, handle_);
         }
 
       private:
         std::shared_ptr<::spdlog::logger> logger_;
-        ::gabs_handle handle_;
+        ::gabs_logger_h handle_;
 };
 
 }; // namespace gabs::log

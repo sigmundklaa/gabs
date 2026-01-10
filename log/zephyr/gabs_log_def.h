@@ -12,18 +12,28 @@
 
 GABS_BEGIN_DECL
 
-/* TODO: Could check if logging is enabled */
-typedef Z_LOG_INSTANCE_STRUCT *gabs_logger_h;
+struct gabs_log_zephyr_data {
+        LOG_INSTANCE_PTR_DECLARE(ptr);
+        gabs_logger_h handle;
+};
 
 /** @brief Initialize logging handle */
-#define GABS_LOG_ZEPHYR_INIT(module_, inst_) LOG_INSTANCE_PTR(module_, inst_)
+#define GABS_LOG_ZEPHYR_DEFINE(name_, module_, inst_)                          \
+        static struct gabs_log_zephyr_data name_##data__ = {                   \
+                LOG_INSTANCE_PTR(module_, inst_),                              \
+        };                                                                     \
+        static const gabs_logger_h *name_ = &name_##data__.handle;
+
+#define GABS_LOG_ZEPHYR_GET(handle_)                                           \
+        gabs_container_of(handle_, struct gabs_log_zephyr_data, handle)->ptr
 
 #define gabs_log_zephyr__(handle_, level_, ...)                                \
         do {                                                                   \
                 /* Needs to be set, just set to  lowest possible.  Filtering   \
                    is primarily done by the level of the logging instance. */  \
                 LOG_LEVEL_SET(LOG_LEVEL_DBG);                                  \
-                Z_LOG_INSTANCE(level_, handle_, __VA_ARGS__);                  \
+                Z_LOG_INSTANCE(level_, GABS_LOG_ZEPHYR_GET(handle_),           \
+                               __VA_ARGS__);                                   \
         } while (0)
 
 #define gabs_log_dbgf(handle_, ...)                                            \

@@ -51,7 +51,7 @@ spdlog::level::level_enum convert_level(enum gabs_log_spdlog_level__ level)
 
 }; // namespace
 
-void gabs_log_spdlog_impl__(gabs_logger_h handle,
+void gabs_log_spdlog_impl__(const gabs_logger_h *handle,
                             enum gabs_log_spdlog_level__ level,
                             const char *file, const char *func, int line,
                             const char *fmt, ...)

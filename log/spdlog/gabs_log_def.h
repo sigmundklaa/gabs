@@ -7,8 +7,6 @@
 
 GABS_BEGIN_DECL
 
-typedef const gabs_handle *gabs_logger_h;
-
 /* Can't expose actual spdlog level, as we can't include the header file in
  * case this is used by a C library. Thus we just use an internal level
  * that is converted in the C++ code. */
@@ -23,7 +21,7 @@ enum gabs_log_spdlog_level__ {
  * @brief Actual implementation for writing log message to spdlog
  * (implementation in C++).
  */
-void gabs_log_spdlog_impl__(gabs_logger_h *handle,
+void gabs_log_spdlog_impl__(const gabs_logger_h *handle,
                             enum gabs_log_spdlog_level__ level,
                             const char *file, const char *func, int line,
                             const char *fmt, ...);
