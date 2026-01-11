@@ -8,7 +8,8 @@
 #include <cstring>
 
 #include <gabs/alloc.h>
-#include <gabs/alloc/dynamic.h>
+#include <gabs/cc/handle.hh>
+#include <gabs/alloc/dynamic.hh>
 
 namespace gabs::memory
 {
@@ -24,20 +25,19 @@ int do_dealloc(const ::gabs_allocator_h *handle, void *mem);
 
 }; // namespace detail
 
-template <template <class> class BaseAllocator = std::allocator> class allocator
+template <template <class> class BaseAllocator = std::allocator>
+class allocator
+        : public core::handle_wrapper<allocator<BaseAllocator>, dyn_alloc>
 {
       public:
         using value_type = std::byte;
 
         allocator(const std::shared_ptr<BaseAllocator<value_type>> &underlying)
-                : underlying_(underlying)
+                : underlying_(underlying),
+                  core::handle_wrapper<allocator, dyn_alloc>(
+                          &detail::do_alloc<allocator>,
+                          &detail::do_dealloc<allocator>)
         {
-                using GABS_DYN_ALLOC_IMPL(std_cc, alloc) =
-                        detail::do_alloc<allocator>;
-                using GABS_DYN_ALLOC_IMPL(std_cc, dealloc) =
-                        detail::do_dealloc<allocator>;
-
-                dynamic_ = GABS_DYN_ALLOC_INIT(std_cc);
         }
 
         allocator() : allocator(std::make_shared<BaseAllocator<value_type>>())
@@ -46,23 +46,11 @@ template <template <class> class BaseAllocator = std::allocator> class allocator
 
         const BaseAllocator<value_type> &underlying() const
         {
-                return underlying_.get();
-        }
-
-        const ::gabs_allocator_h *handle() const
-        {
-                return GABS_DYN_ALLOC_HANDLE(&dynamic_);
-        }
-
-        static allocator *from_handle(const ::gabs_allocator_h *handle)
-        {
-                auto dyn = GABS_DYN_ALLOC_GET(handle);
-                return gabs_container_of(dyn, allocator, dynamic_);
+                return *underlying_;
         }
 
       protected:
         std::shared_ptr<BaseAllocator<value_type>> underlying_;
-        ::gabs_dyn_allocator dynamic_;
 };
 
 namespace detail
@@ -76,7 +64,7 @@ int do_alloc(const ::gabs_allocator_h *handle, std::size_t size, void **mem)
         auto alloc = Allocator::from_handle(handle);
         auto inst = alloc->underlying();
 
-        T *ptr = inst->allocate(sizeof(size) + size);
+        T *ptr = inst.allocate(sizeof(size) + size);
         std::memcpy(ptr, &size, sizeof(size));
 
         *mem = ((std::byte *)ptr) + sizeof(size);
@@ -96,7 +84,7 @@ int do_dealloc(const ::gabs_allocator_h *handle, void *mem)
         std::byte *base = reinterpret_cast<std::byte *>(mem) - sizeof(size);
 
         std::memcpy(&size, base, sizeof(size));
-        inst->deallocate(reinterpret_cast<T *>(base), sizeof(size) + size);
+        inst.deallocate(reinterpret_cast<T *>(base), sizeof(size) + size);
 
         return 0;
 }
