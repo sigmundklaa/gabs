@@ -89,7 +89,7 @@ function(gabs_module name)
 
         list(
             TRANSFORM
-                ${gabs_module_arg_REQUIRES}
+                gabs_module_arg_REQUIRES
             APPEND
                 _iface
             OUTPUT_VARIABLE
