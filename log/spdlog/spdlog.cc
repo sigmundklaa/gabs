@@ -27,7 +27,7 @@ std::string vasprintf_like(const char *fmt, va_list &va)
         }
 
         std::string str;
-        str.reserve(size);
+        str.resize(size);
 
         auto ret = ::vsnprintf(str.data(), size, fmt, va);
         assert(ret == size);
