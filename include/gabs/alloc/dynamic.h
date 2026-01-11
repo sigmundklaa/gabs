@@ -3,6 +3,7 @@
 #define GABS_ALLOC_DYNAMIC_H__
 
 #include <gabs/alloc.h>
+#include <gabs/core/util.h>
 
 GABS_BEGIN_DECL
 
@@ -20,11 +21,10 @@ struct gabs_dyn_allocator {
 #define GABS_DYN_ALLOC_IMPL(impl_, method_)                                    \
         gabs_impl_dyn_alloc_##method_##_##impl_##__
 
-#define GABS_DYN_ALLOC_INIT(impl_)                                             \
+#define GABS_DYN_ALLOC_INIT_2__(alloc_, dealloc_)                              \
         (struct gabs_dyn_allocator)                                            \
         {                                                                      \
-                .alloc = GABS_DYN_ALLOC_IMPL(impl_, alloc),                    \
-                .dealloc = GABS_DYN_ALLOC_IMPL(impl_, dealloc),                \
+                .alloc = alloc_, .dealloc = dealloc_,                          \
         }
 
 #else
@@ -34,13 +34,23 @@ struct gabs_dyn_allocator {
 
 #define GABS_DYN_ALLOC_IMPL(impl_, method_) gabs_##method_
 
-#define GABS_DYN_ALLOC_INIT(impl_)                                             \
+#define GABS_DYN_ALLOC_INIT_2__(...)                                           \
         (struct gabs_dyn_allocator)                                            \
         {                                                                      \
         }
 #endif
 
 typedef struct gabs_dyn_allocator gabs_dyn_allocator;
+
+#define GABS_DYN_ALLOC_INIT_1__(impl_)                                         \
+        GABS_DYN_ALLOC_INIT_2__(GABS_DYN_ALLOC_IMPL(impl_, alloc),             \
+                                GABS_DYN_ALLOC_IMPL(impl_, dealloc))
+
+#define GABS_DYN_ALLOC_INIT__(count_, ...)                                     \
+        GABS_CONCAT_3(GABS_DYN_ALLOC_INIT_, count_, __)(__VA_ARGS__)
+
+#define GABS_DYN_ALLOC_INIT(...)                                               \
+        GABS_DYN_ALLOC_INIT__(GABS_COUNT_VA_ARGS(__VA_ARGS__), __VA_ARGS__)
 
 #define GABS_DYN_ALLOC_HANDLE(alloc_) (&(alloc_)->handle)
 

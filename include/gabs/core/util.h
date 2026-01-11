@@ -3,6 +3,7 @@
 #define GABS_CORE_UTIL_H__
 
 #include <stdint.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 #define GABS_BEGIN_DECL extern "C" {
@@ -28,6 +29,17 @@ GABS_BEGIN_DECL
 
 #define gabs_min(a, b) (((a) < (b)) ? (a) : (b))
 #define gabs_max(a, b) (((a) > (b)) ? (a) : (b))
+
+#define GABS_COUNT_VA_ARGS__(x0, x1, x2, x3, N, ...) N
+
+#define GABS_COUNT_VA_ARGS(...) GABS_COUNT_VA_ARGS__(__VA_ARGS__, 4, 3, 2, 1, 0)
+
+#define GABS_CONCAT_IMPL__(a, b) a##b
+#define GABS_CONCAT__(a, b)      GABS_CONCAT_IMPL__(a, b)
+#define GABS_CONCAT_1(a)         a
+#define GABS_CONCAT_2(a, b)      GABS_CONCAT__(a, GABS_CONCAT_1(b))
+#define GABS_CONCAT_3(a, ...)    GABS_CONCAT__(a, GABS_CONCAT_2(__VA_ARGS__))
+#define GABS_CONCAT_4(a, ...)    GABS_CONCAT__(a, GABS_CONCAT_3(__VA_ARGS__))
 
 GABS_END_DECL
 
