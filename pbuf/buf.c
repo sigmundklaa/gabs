@@ -95,6 +95,7 @@ gabs_pbuf gabs_pbuf_view(gabs_pbuf buf, size_t offset, size_t size,
         size_t cur_offset;
         size_t cur_size;
         gabs_pbuf view;
+        gabs_pbuf cur;
 
         it = buf_seek(&buf, offset, &boundary);
 
@@ -115,15 +116,15 @@ gabs_pbuf gabs_pbuf_view(gabs_pbuf buf, size_t offset, size_t size,
                 cur_size = gabs_min(gabs_pbuf_ci_size(it), size);
                 size -= cur_size;
 
-                view = gabs_pbuf_new_ro(alloc, gabs_pbuf_ci_data(it), cur_size);
-                if (!gabs_pbuf_okay(view)) {
+                cur = gabs_pbuf_new_ro(alloc, gabs_pbuf_ci_data(it), cur_size);
+                if (!gabs_pbuf_okay(cur)) {
                         assert(0);
 
                         break;
                 }
 
                 inserter =
-                        gabs_pbuf_ci_insert(gabs_pbuf_ci_next(inserter), view);
+                        gabs_pbuf_ci_insert(gabs_pbuf_ci_next(inserter), cur);
         }
 
         return view;
