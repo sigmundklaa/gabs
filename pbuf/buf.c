@@ -235,12 +235,12 @@ void gabs_pbuf_shrink(gabs_pbuf *buf, size_t offset, size_t size)
                 }
 
                 if (!gabs_pbuf_ci_eoi(it)) {
-                        if (gabs_pbuf_ci_size(it) > rem) {
-                                (void)gabs_pbuf_ci_release_tail(it, rem);
-
-                                it = gabs_pbuf_ci_next(it);
+                        if (gabs_pbuf_ci_size(it) > bytes) {
+                                (void)gabs_pbuf_ci_release_tail(
+                                        it, gabs_pbuf_ci_size(it) - bytes);
                         }
 
+                        it = gabs_pbuf_ci_next(it);
                         if (!gabs_pbuf_ci_eoi(it)) {
                                 gabs_pbuf_ci_detach(it);
                         }
