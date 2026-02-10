@@ -225,10 +225,13 @@ void gabs_pbuf_shrink(gabs_pbuf *buf, size_t offset, size_t size)
 
                 /* Iterate over `size` bytes, and remove anything after those
                  * bytes. */
-                for (; rem && !gabs_pbuf_ci_eoi(it);
-                     it = gabs_pbuf_ci_next(it)) {
+                for (; !gabs_pbuf_ci_eoi(it); it = gabs_pbuf_ci_next(it)) {
                         bytes = gabs_min(gabs_pbuf_ci_size(it), rem);
                         rem -= bytes;
+
+                        if (rem == 0) {
+                                break;
+                        }
                 }
 
                 if (!gabs_pbuf_ci_eoi(it)) {
