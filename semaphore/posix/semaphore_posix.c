@@ -1,7 +1,14 @@
 
+#include <errno.h>
+
 #include <gabs/semaphore.h>
 
 #include <posix_timediff.h>
+
+static int to_errno(int status)
+{
+        return status < 0 ? -errno : status;
+}
 
 int gabs_sem_down(gabs_sem *sem, uint64_t timeout)
 {
@@ -9,9 +16,9 @@ int gabs_sem_down(gabs_sem *sem, uint64_t timeout)
         int status;
 
         if (timeout == 0) {
-                return -sem_trywait(sem);
+                return to_errno(sem_trywait(sem));
         } else if (timeout == UINT64_MAX) {
-                return -sem_wait(sem);
+                return to_errno(sem_wait(sem));
         }
 
         status = posix_timediff_resolve(timeout, &spec);
@@ -19,5 +26,5 @@ int gabs_sem_down(gabs_sem *sem, uint64_t timeout)
                 return status;
         }
 
-        return -sem_timedwait(sem, &spec);
+        return to_errno(sem_timedwait(sem, &spec));
 }
