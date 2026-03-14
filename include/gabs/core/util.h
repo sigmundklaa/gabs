@@ -30,6 +30,8 @@ GABS_BEGIN_DECL
 #define gabs_min(a, b) (((a) < (b)) ? (a) : (b))
 #define gabs_max(a, b) (((a) > (b)) ? (a) : (b))
 
+#define gabs_array_size(arr) (sizeof(arr)/sizeof((arr)[0]))
+
 #define GABS_COUNT_VA_ARGS__(x0, x1, x2, x3, N, ...) N
 
 #define GABS_COUNT_VA_ARGS(...) GABS_COUNT_VA_ARGS__(__VA_ARGS__, 4, 3, 2, 1, 0)
