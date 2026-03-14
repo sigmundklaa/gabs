@@ -4,7 +4,8 @@
 #include <time.h>
 
 #include <gabs/random.h>
-#include <gabs/init.h>
+
+#include <posix_init.h>
 
 uint32_t gabs_random(void)
 {
@@ -16,4 +17,4 @@ static void seed(void)
         srandom(time(NULL));
 }
 
-GABS_INIT(seed);
+POSIX_INIT(seed);
