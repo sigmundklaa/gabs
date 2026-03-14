@@ -28,6 +28,10 @@
 #define GABS_CONFIG_TIMER_POSIX_MAX (10)
 #endif
 
+#ifndef GABS_CONFIG_TIMER_INIT_PRIORITY
+#define GABS_CONFIG_TIMER_INIT_PRIORITY (30)
+#endif
+
 GABS_LOGGER_DECLARE(logger, timer);
 
 struct timer_posix {
@@ -381,7 +385,7 @@ bool gabs_timer_active(gabs_timer id)
         return mask_test(&timer_from_id(id)->state, BIT_ACTIVE);
 }
 
-static void timer_plat_init(void)
+POSIX_INIT(GABS_CONFIG_TIMER_INIT_PRIORITY)
 {
         int status;
 
@@ -399,7 +403,7 @@ static void timer_plat_init(void)
         }
 }
 
-static void timer_plat_deinit(void)
+POSIX_DEINIT(GABS_CONFIG_TIMER_INIT_PRIORITY)
 {
         int status;
 
@@ -413,6 +417,3 @@ static void timer_plat_deinit(void)
 
         (void)close(event_fd);
 }
-
-POSIX_INIT(timer_plat_init, 30);
-POSIX_DEINIT(timer_plat_deinit, 30);
