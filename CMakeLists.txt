@@ -18,3 +18,6 @@ add_subdirectory(log)
 add_subdirectory(mutex)
 add_subdirectory(semaphore)
 add_subdirectory(random)
+add_subdirectory(timer)
+
+gabs_provide(gabs-timer-posix)
