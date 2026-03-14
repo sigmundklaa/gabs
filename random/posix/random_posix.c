@@ -12,9 +12,7 @@ uint32_t gabs_random(void)
         return random();
 }
 
-static void seed(void)
+POSIX_INIT(10)
 {
         srandom(time(NULL));
 }
-
-POSIX_INIT(seed);
