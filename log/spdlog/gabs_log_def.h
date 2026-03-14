@@ -7,6 +7,9 @@
 
 GABS_BEGIN_DECL
 
+#define GABS_LOGGER_DECLARE(handle_, name_)                                    \
+        static const gabs_logger_h *handle_ = NULL
+
 /* Can't expose actual spdlog level, as we can't include the header file in
  * case this is used by a C library. Thus we just use an internal level
  * that is converted in the C++ code. */
@@ -28,11 +31,8 @@ void gabs_log_spdlog_impl__(const gabs_logger_h *handle,
 
 #define gabs_log_spdlog__(handle_, level_, ...)                                \
         do {                                                                   \
-                if (handle_) {                                                 \
-                        gabs_log_spdlog_impl__(handle_, level_, __FILE__,      \
-                                               __func__, __LINE__,             \
-                                               __VA_ARGS__);                   \
-                }                                                              \
+                gabs_log_spdlog_impl__(handle_, level_, __FILE__, __func__,    \
+                                       __LINE__, __VA_ARGS__);                 \
         } while (0)
 
 #define gabs_log_dbgf(handle_, ...)                                            \

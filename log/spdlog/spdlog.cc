@@ -49,6 +49,15 @@ spdlog::level::level_enum convert_level(enum gabs_log_spdlog_level__ level)
         }
 }
 
+std::shared_ptr<spdlog::logger> get_logger(const ::gabs_logger_h *handle)
+{
+        if (handle != nullptr) {
+                return gabs::log::spdlog_logger::from_handle(handle)->logger();
+        }
+
+        return spdlog::default_logger();
+}
+
 }; // namespace
 
 void gabs_log_spdlog_impl__(const gabs_logger_h *handle,
@@ -61,7 +70,7 @@ void gabs_log_spdlog_impl__(const gabs_logger_h *handle,
         util::defer _([&]() { va_end(va); });
 
         auto msg = vasprintf_like(fmt, va);
-        auto logger = gabs::log::spdlog_logger::from_handle(handle)->logger();
+        auto logger = get_logger(handle);
         auto spdlevel = convert_level(level);
         auto loc = spdlog::source_loc{file, line, func};
 

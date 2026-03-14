@@ -7,3 +7,7 @@ config APP_LINK_WITH_GABS_IFACE
     bool "Link application with GABS interface library"
     default y
     depends on GABS
+
+module = GABS
+module-str = gabs
+source "subsys/logging/Kconfig.template.log_config"

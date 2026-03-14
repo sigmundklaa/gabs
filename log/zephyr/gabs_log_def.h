@@ -17,15 +17,30 @@ struct gabs_log_zephyr_data {
         gabs_logger_h handle;
 };
 
-/** @brief Initialize logging handle */
-#define GABS_LOG_ZEPHYR_DEFINE(name_, module_, inst_)                          \
-        static struct gabs_log_zephyr_data name_##data__ = {                   \
+/**
+ * @brief Initialize logging handle
+ *
+ * This assumes that both `LOG_MODULE_DECLARE`/`LOG_MODULE_REGISTER` and
+ * `LOG_INSTANCE_REGISTER` has been invoked already. This can be used by
+ * application code to create a logger that directs its output to a Zephyr
+ * instance.
+ */
+#define GABS_LOGGER_ZEPHYR_DECLARE(handle_, module_, inst_)                    \
+        static struct gabs_log_zephyr_data handle_##data__ = {                 \
                 LOG_INSTANCE_PTR(module_, inst_),                              \
         };                                                                     \
-        static const gabs_logger_h *name_ = &name_##data__.handle;
+        static const gabs_logger_h *handle_ = &handle_##data__.handle
 
-#define GABS_LOG_ZEPHYR_GET(handle_)                                           \
+#define GABS_LOGGER_ZEPHYR_GET(handle_)                                        \
         gabs_container_of(handle_, struct gabs_log_zephyr_data, handle)->ptr
+
+/**
+ * @brief Create logger in gabs default namespace
+ */
+#define GABS_LOGGER_DECLARE(handle_, name_)                                    \
+        LOG_MODULE_DECLARE(gabs);                                              \
+        LOG_INSTANCE_REGISTER(gabs, name_, LOG_LEVEL_DBG);                     \
+        GABS_LOGGER_ZEPHYR_DEFINE(handle_, name_)
 
 #define gabs_log_zephyr__(handle_, level_, ...)                                \
         do {                                                                   \
@@ -35,7 +50,7 @@ struct gabs_log_zephyr_data {
                 /* Needs to be set, just set to  lowest possible.  Filtering   \
                    is primarily done by the level of the logging instance. */  \
                 LOG_LEVEL_SET(LOG_LEVEL_DBG);                                  \
-                Z_LOG_INSTANCE(level_, GABS_LOG_ZEPHYR_GET(handle_),           \
+                Z_LOG_INSTANCE(level_, GABS_LOGGER_ZEPHYR_GET(handle_),        \
                                __VA_ARGS__);                                   \
         } while (0)
 

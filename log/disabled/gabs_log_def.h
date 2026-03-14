@@ -5,6 +5,9 @@
 #include <gabs/core/util.h>
 #include <gabs/core/handle.h>
 
+#define GABS_LOGGER_DECLARE(handle_, name_)                                    \
+        static const gabs_logger_h *handle_ = NULL
+
 #define gabs_disabled_logf__(handle_, fmt_, ...)                               \
         do {                                                                   \
                 GABS_UNUSED(handle_);                                          \
