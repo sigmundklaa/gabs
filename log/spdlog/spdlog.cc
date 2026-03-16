@@ -4,6 +4,7 @@
 #include <assert.h>
 
 #include <spdlog/spdlog.h>
+#include <spdlog/cfg/env.h>
 
 #include <gabs/log/spdlog.hh>
 #include <gabs/cc/defer.hh>
@@ -12,6 +13,14 @@ namespace
 {
 
 using namespace gabs;
+
+struct load_levels {
+        load_levels()
+        {
+                spdlog::cfg::load_env_levels();
+        }
+};
+[[gnu::used]] load_levels _;
 
 std::string vasprintf_like(const char *fmt, va_list &va)
 {
