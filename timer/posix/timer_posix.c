@@ -13,7 +13,6 @@
 
 #include <posix_init.h>
 
-#include <gabs/log.h>
 #include <gabs/core/util.h>
 #include <gabs/timer.h>
 
@@ -31,8 +30,6 @@
 #ifndef GABS_CONFIG_TIMER_INIT_PRIORITY
 #define GABS_CONFIG_TIMER_INIT_PRIORITY (30)
 #endif
-
-GABS_LOGGER_DECLARE(logger, timer);
 
 struct timer_posix {
         gabs_timer_cb cb;
@@ -61,8 +58,6 @@ static void trigger_reset(void)
 
         size = write(event_fd, &count, sizeof(count));
         assert(size == sizeof(count));
-
-        gabs_log_dbgf(logger, "Triggering reset");
 }
 
 static void to_itimerspec(struct itimerspec *spec, uint32_t time_us)
@@ -249,13 +244,10 @@ static void service_pfds(struct pollfd *pfd, size_t count)
                         continue;
                 }
 
-                gabs_log_dbgf(logger, "Timer alarm");
                 (void)read(pfd->fd, &dummy, sizeof(dummy));
 
                 cur = timer_from_fd(pfd->fd);
                 if (cur == NULL) {
-                        gabs_log_errf(logger, "Unrecognized timer fd: %i",
-                                      pfd->fd);
                         continue;
                 }
 
@@ -287,7 +279,6 @@ static void *worker(void *arg)
                 state = atomic_load(&work_state);
 
                 if (state == WORK_STATE_EXIT) {
-                        gabs_log_inff(logger, "Exiting timer worker thread");
                         break;
                 }
 
@@ -296,15 +287,12 @@ static void *worker(void *arg)
 
                 num_ready = poll(pfds, count, -1);
                 if (num_ready < 0) {
-                        gabs_log_errf(logger, "Polling timers returned %i",
-                                      errno);
                         continue;
                 }
 
                 pfd = &pfds[0];
                 if (pfd->revents & POLLIN) {
                         /* Reset set of fds being watched */
-                        gabs_log_dbgf(logger, "Timer thread reloaded");
                         (void)read(pfd->fd, &dummy, sizeof(dummy));
                         continue;
                 }
@@ -387,33 +375,21 @@ bool gabs_timer_active(gabs_timer id)
 
 POSIX_INIT(GABS_CONFIG_TIMER_INIT_PRIORITY)
 {
-        int status;
-
         work_state = WORK_STATE_NORMAL;
 
         event_fd = eventfd(0, EFD_SEMAPHORE);
         if (event_fd < 0) {
-                gabs_log_errf(logger, "Unable to create eventfd");
                 return;
         }
 
-        status = pthread_create(&thread_h, NULL, worker, NULL);
-        if (status != 0) {
-                gabs_log_errf(logger, "Unable to start timer thread");
-        }
+        (void)pthread_create(&thread_h, NULL, worker, NULL);
 }
 
 POSIX_DEINIT(GABS_CONFIG_TIMER_INIT_PRIORITY)
 {
-        int status;
-
         atomic_store(&work_state, WORK_STATE_EXIT);
         trigger_reset();
 
-        status = pthread_join(thread_h, NULL);
-        if (status != 0) {
-                gabs_log_errf(logger, "Unable to join timer thread");
-        }
-
+        (void)pthread_join(thread_h, NULL);
         (void)close(event_fd);
 }
