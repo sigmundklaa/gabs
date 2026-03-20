@@ -59,7 +59,7 @@ GABS_API bool gabs_timer_okay(gabs_timer timer);
  * @retval -EBUSY Already started
  * @retval <0 Error code
  */
-GABS_API int gabs_timer_start(gabs_timer timer, uint32_t delay_us);
+GABS_API int gabs_timer_start(gabs_timer timer, uint64_t delay_us);
 
 /**
  * @brief Restart @p timer.
@@ -71,7 +71,7 @@ GABS_API int gabs_timer_start(gabs_timer timer, uint32_t delay_us);
  * @retval 0 Success
  * @retval <0 Error code
  */
-GABS_API int gabs_timer_restart(gabs_timer timer, uint32_t delay_us);
+GABS_API int gabs_timer_restart(gabs_timer timer, uint64_t delay_us);
 
 /**
  * @brief Stop @p timer

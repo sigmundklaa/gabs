@@ -85,7 +85,7 @@ int gabs_timer_uninstall(gabs_timer timer)
         return 0;
 }
 
-static int timer_start(struct timer_info *info, uint32_t delay_us)
+static int timer_start(struct timer_info *info, uint64_t delay_us)
 {
         int status;
         k_timeout_t timeout;
@@ -102,7 +102,7 @@ static int timer_start(struct timer_info *info, uint32_t delay_us)
         return 0;
 }
 
-int gabs_timer_start(gabs_timer timer, uint32_t delay_us)
+int gabs_timer_start(gabs_timer timer, uint64_t delay_us)
 {
         struct timer_info *info = timer;
 
@@ -113,7 +113,7 @@ int gabs_timer_start(gabs_timer timer, uint32_t delay_us)
         return timer_start(info, delay_us);
 }
 
-int gabs_timer_restart(gabs_timer timer, uint32_t delay_us)
+int gabs_timer_restart(gabs_timer timer, uint64_t delay_us)
 {
         return timer_start(timer, delay_us);
 }

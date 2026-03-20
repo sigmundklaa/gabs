@@ -374,7 +374,7 @@ int gabs_timer_uninstall(gabs_timer id)
         return 0;
 }
 
-int gabs_timer_start(gabs_timer id, uint32_t delay_us)
+int gabs_timer_start(gabs_timer id, uint64_t delay_us)
 {
         int status;
         struct timer_posix *t;
@@ -391,7 +391,7 @@ int gabs_timer_start(gabs_timer id, uint32_t delay_us)
         return status;
 }
 
-int gabs_timer_restart(gabs_timer id, uint32_t delay_us)
+int gabs_timer_restart(gabs_timer id, uint64_t delay_us)
 {
         return timer_restart(timer_from_id(id), delay_us);
 }
