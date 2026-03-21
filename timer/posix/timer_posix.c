@@ -352,6 +352,9 @@ int gabs_timer_ctx_start(struct gabs_timer_posix_ctx *ctx)
 
         expected = WORK_STATE_STOPPED;
 
+        while (!atomic_load_explicit(&ctx->stopped, memory_order_relaxed)) {
+        }
+
         while (!atomic_compare_exchange_weak(&ctx->work_state, &expected,
                                              WORK_STATE_NORMAL)) {
                 if (expected == WORK_STATE_NORMAL) {
