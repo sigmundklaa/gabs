@@ -310,7 +310,7 @@ int gabs_timer_ctx_init(struct gabs_timer_posix_ctx *ctx)
 
 int gabs_timer_ctx_deinit(struct gabs_timer_posix_ctx *ctx)
 {
-        gabs_log_errf(logger, "Destroying timer context");
+        gabs_log_dbgf(logger, "Destroying timer context");
 
         atomic_store(&ctx->work_state, WORK_STATE_EXIT);
         trigger_reset(ctx);
@@ -336,6 +336,8 @@ int gabs_timer_ctx_stop(struct gabs_timer_posix_ctx *ctx)
                         return -EINVAL;
                 }
         }
+
+        trigger_reset(ctx);
 
         /* TODO: This waiting could be improved with a futex */
         while (!atomic_load_explicit(&ctx->stopped, memory_order_relaxed)) {
