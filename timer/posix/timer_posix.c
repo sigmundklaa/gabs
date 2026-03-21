@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <stdatomic.h>
 
+#include <gabs/log.h>
 #include <gabs/core/util.h>
 #include <gabs/timer.h>
 
@@ -20,6 +21,8 @@
 #define BIT_ZOMBIE (1 << 1) /* Set by client, unset by worker */
 #define BIT_ACTIVE (1 << 2) /* Set/unset by worker, unset by client */
 #define BIT_SCHED  (1 << 3) /* Set by client, unset by worker */
+
+GABS_LOGGER_DECLARE(logger, timer);
 
 enum {
         WORK_STATE_NORMAL,
@@ -36,6 +39,8 @@ static void trigger_reset(struct gabs_timer_posix_ctx *ctx)
 
         size = write(ctx->eventfd, &count, sizeof(count));
         assert(size == sizeof(count));
+
+        gabs_log_dbgf(logger, "Triggering reset");
 }
 
 static void to_itimerspec(struct itimerspec *spec, uint64_t time_us)
@@ -210,10 +215,13 @@ static void service_pfds(struct gabs_timer_posix_ctx *ctx, struct pollfd *pfd,
                         continue;
                 }
 
+                gabs_log_dbgf(logger, "Timer alarm");
                 (void)read(pfd->fd, &dummy, sizeof(dummy));
 
                 cur = timer_from_fd(ctx, pfd->fd);
                 if (cur == NULL) {
+                        gabs_log_errf(logger, "Unrecognized timer fd: %i",
+                                      pfd->fd);
                         continue;
                 }
 
@@ -244,6 +252,7 @@ static void *worker(void *ctx_arg)
                 state = atomic_load(&ctx->work_state);
 
                 if (state == WORK_STATE_EXIT) {
+                        gabs_log_inff(logger, "Exiting timer worker thread");
                         atomic_store(&ctx->stopped, true);
                         break;
                 } else if (state == WORK_STATE_STOPPED) {
@@ -257,12 +266,15 @@ static void *worker(void *ctx_arg)
 
                 num_ready = poll(pfds, count, -1);
                 if (num_ready < 0) {
+                        gabs_log_errf(logger, "Polling timers returned %i",
+                                      errno);
                         continue;
                 }
 
                 pfd = &pfds[0];
                 if (pfd->revents & POLLIN) {
                         /* Reset set of fds being watched */
+                        gabs_log_dbgf(logger, "Timer thread reloaded");
                         (void)read(pfd->fd, &dummy, sizeof(dummy));
                         continue;
                 }
@@ -282,11 +294,13 @@ int gabs_timer_ctx_init(struct gabs_timer_posix_ctx *ctx)
 
         ctx->eventfd = eventfd(0, EFD_SEMAPHORE);
         if (ctx->eventfd < 0) {
+                gabs_log_errf(logger, "Failed to create eventfd");
                 return -errno;
         }
 
         status = pthread_create(&ctx->thread, NULL, worker, ctx);
         if (status != 0) {
+                gabs_log_errf(logger, "Failed to create thread");
                 (void)close(ctx->eventfd);
                 status = -status;
         }
@@ -296,6 +310,8 @@ int gabs_timer_ctx_init(struct gabs_timer_posix_ctx *ctx)
 
 int gabs_timer_ctx_deinit(struct gabs_timer_posix_ctx *ctx)
 {
+        gabs_log_errf(logger, "Destroying timer context");
+
         atomic_store(&ctx->work_state, WORK_STATE_EXIT);
         trigger_reset(ctx);
 
