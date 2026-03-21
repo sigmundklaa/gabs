@@ -209,14 +209,23 @@ static void service_pfds(struct gabs_timer_posix_ctx *ctx, struct pollfd *pfd,
         struct gabs_timer_posix *cur;
         size_t i;
         uint64_t dummy;
+        unsigned int events;
 
         for (i = 0; i < count; i++, pfd++) {
-                if (!(pfd->revents & POLLIN)) {
+                events = pfd->revents;
+
+                if (!events) {
                         continue;
                 }
 
                 gabs_log_dbgf(logger, "Timer alarm");
                 (void)read(pfd->fd, &dummy, sizeof(dummy));
+
+                if (events & (~POLLIN)) {
+                        gabs_log_errf(logger, "Unrecognized timer events: 0x%x",
+                                      events);
+                        continue;
+                }
 
                 cur = timer_from_fd(ctx, pfd->fd);
                 if (cur == NULL) {
@@ -272,7 +281,13 @@ static void *worker(void *ctx_arg)
                 }
 
                 pfd = &pfds[0];
-                if (pfd->revents & POLLIN) {
+                if (pfd->revents) {
+                        if (!(pfd->revents & POLLIN)) {
+                                gabs_log_errf(logger,
+                                              "Eventfd unrecognized events %x",
+                                              pfd->revents);
+                        }
+
                         /* Reset set of fds being watched */
                         gabs_log_dbgf(logger, "Timer thread reloaded");
                         (void)read(pfd->fd, &dummy, sizeof(dummy));
