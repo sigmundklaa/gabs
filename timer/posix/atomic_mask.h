@@ -73,45 +73,14 @@ static inline bool mask_cas(atomic_uint *state, unsigned int cmp,
         return true;
 }
 
-static inline bool mask_cac(atomic_uint *state, unsigned int cmp)
-{
-        unsigned int expected;
-        unsigned int masked;
-
-        expected = cmp;
-        masked = 0;
-
-        while (!atomic_compare_exchange_weak(state, &expected, masked)) {
-                if ((expected & cmp) != cmp) {
-                        return false;
-                }
-
-                masked = expected & ~(cmp);
-        }
-
-        return true;
-}
-
-static inline unsigned int mask_get_ex(atomic_uint *state, unsigned int mask,
-                                       memory_order order)
-{
-        return atomic_load_explicit(state, order) & mask;
-}
-
 static inline unsigned int mask_get(atomic_uint *state, unsigned int mask)
 {
-        return mask_get_ex(state, mask, memory_order_seq_cst);
-}
-
-static inline bool mask_test_ex(atomic_uint *state, unsigned int mask,
-                                memory_order order)
-{
-        return mask_get_ex(state, mask, order) == mask;
+        return atomic_load(state) & mask;
 }
 
 static inline bool mask_test(atomic_uint *state, unsigned int mask)
 {
-        return mask_test_ex(state, mask, memory_order_seq_cst);
+        return mask_get(state, mask) == mask;
 }
 
 GABS_END_DECL

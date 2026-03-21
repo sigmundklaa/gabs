@@ -18,11 +18,10 @@
 
 #include "atomic_mask.h"
 
-#define BIT_USED     (1 << 0) /* Set by client, unset by worker */
-#define BIT_ZOMBIE   (1 << 1) /* Set by client, unset by worker */
-#define BIT_ACTIVE   (1 << 2) /* Set/unset by worker, unset by client */
-#define BIT_SCHED    (1 << 3) /* Set by client, unset by worker */
-#define BIT_STOPPING (1 << 4) /* Set by client, unset by worker */
+#define BIT_USED   (1 << 0) /* Set by client, unset by worker */
+#define BIT_ZOMBIE (1 << 1) /* Set by client, unset by worker */
+#define BIT_ACTIVE (1 << 2) /* Set/unset by worker, unset by client */
+#define BIT_SCHED  (1 << 3) /* Set by client, unset by worker */
 
 #ifndef GABS_CONFIG_TIMER_POSIX_MAX
 #define GABS_CONFIG_TIMER_POSIX_MAX (10)
@@ -92,45 +91,14 @@ static struct timer_posix *timer_from_id(gabs_timer id)
         return &timers[id];
 }
 
-static int timer_stop(struct timer_posix *t)
+static int timer_restart(struct timer_posix *t, uint32_t delay_us)
 {
         int status;
         struct itimerspec spec;
 
-        mask_set(&t->state, BIT_STOPPING);
+        /* Make sure timer does not fire and/or start before we schedule
+         * it again. */
         mask_clear(&t->state, BIT_ACTIVE | BIT_SCHED);
-
-        /* Reset timers so that we don't get a spurious event when the previous
-         * time elapses. */
-        spec = (struct itimerspec){0};
-        status = timerfd_settime(t->fd, 0, &spec, NULL);
-        if (status < 0) {
-                status = -errno;
-        }
-
-        trigger_reset();
-
-        return status;
-}
-
-static int timer_stop_sync(struct timer_posix *t)
-{
-        int status;
-
-        status = timer_stop(t);
-        if (status == 0) {
-                while (mask_test_ex(&t->state, BIT_STOPPING,
-                                    memory_order_relaxed)) {
-                }
-        }
-
-        return status;
-}
-
-static int timer_start(struct timer_posix *t, uint64_t delay_us)
-{
-        int status;
-        struct itimerspec spec;
 
         to_itimerspec(&spec, delay_us);
 
@@ -144,13 +112,6 @@ static int timer_start(struct timer_posix *t, uint64_t delay_us)
         }
 
         return status;
-}
-
-static int timer_restart(struct timer_posix *t, uint64_t delay_us)
-{
-        timer_stop(t);
-
-        return timer_start(t, delay_us);
 }
 
 static bool timer_valid(struct timer_posix *t)
@@ -263,10 +224,6 @@ static void prepare_pfds(struct pollfd **pfdptr)
                         continue;
                 }
 
-                if (mask_cac(&cur->state, BIT_STOPPING)) {
-                        continue;
-                }
-
                 /* Set active if scheduled bit is set */
                 if (mask_test(&cur->state, BIT_ACTIVE) ||
                     mask_cas(&cur->state, BIT_SCHED, BIT_ACTIVE)) {
@@ -291,10 +248,6 @@ static void service_pfds(struct pollfd *pfd, size_t count)
 
                 cur = timer_from_fd(pfd->fd);
                 if (cur == NULL) {
-                        continue;
-                }
-
-                if (mask_cac(&cur->state, BIT_STOPPING)) {
                         continue;
                 }
 
@@ -362,14 +315,10 @@ gabs_timer gabs_timer_install(gabs_timer_cb cb, void *user_data)
 
 int gabs_timer_uninstall(gabs_timer id)
 {
-        struct timer_posix *t;
-
-        t = timer_from_id(id);
-
-        (void)timer_stop_sync(t);
+        (void)gabs_timer_stop(id);
 
         /* Perform cleanup when worker is done */
-        mask_set(&t->state, BIT_ZOMBIE);
+        mask_set(&timer_from_id(id)->state, BIT_ZOMBIE);
 
         return 0;
 }
@@ -386,7 +335,7 @@ int gabs_timer_start(gabs_timer id, uint64_t delay_us)
                 return -EBUSY;
         }
 
-        status = timer_start(t, delay_us);
+        status = timer_restart(t, delay_us);
 
         return status;
 }
@@ -398,7 +347,25 @@ int gabs_timer_restart(gabs_timer id, uint64_t delay_us)
 
 int gabs_timer_stop(gabs_timer id)
 {
-        return timer_stop(timer_from_id(id));
+        int status;
+        struct itimerspec spec;
+        struct timer_posix *t;
+
+        t = timer_from_id(id);
+
+        mask_clear(&t->state, BIT_ACTIVE | BIT_SCHED);
+
+        /* Reset timers so that we don't get a spurious event when the previous
+         * time elapses. */
+        spec = (struct itimerspec){0};
+        status = timerfd_settime(t->fd, 0, &spec, NULL);
+        if (status < 0) {
+                status = -errno;
+        }
+
+        trigger_reset();
+
+        return status;
 }
 
 bool gabs_timer_active(gabs_timer id)
