@@ -16,6 +16,56 @@ GABS_BEGIN_DECL
 typedef void (*gabs_timer_cb)(gabs_timer, void *);
 
 /**
+ * @brief Initialize a timer context.
+ *
+ * Each timer context can have multiple timers associated with it. It is
+ * primarily used to ensure that the timers can be safely stopped without
+ * running the risk of spurious timer alarms after stopping/uninstalling the
+ * individual timer.
+ *
+ * This functionality is especially important in cases where the timer is
+ * associated with an object that gets deleted after uninstalling.
+ *
+ * @return int
+ * @retval 0 Success
+ * @retval <0 Error code
+ */
+GABS_API int gabs_timer_ctx_init(gabs_timer_ctx *ctx);
+
+/**
+ * @brief Deinitialize timer context
+ *
+ * This first stops all associated timers, and then destroys them. Attempting
+ * to use the timer after this call is undefined behaviour.
+ *
+ * @return int
+ * @retval 0 Success
+ * @retval <0 Error code
+ */
+GABS_API int gabs_timer_ctx_deinit(gabs_timer_ctx *ctx);
+
+/**
+ * @brief Stop all associated timers
+ *
+ * This ensures that no timers will fire their associated callbacks after this
+ * function returns.
+ *
+ * @return int
+ * @retval 0 Success
+ * @retval <0 Error code
+ */
+GABS_API int gabs_timer_ctx_stop(gabs_timer_ctx *ctx);
+
+/**
+ * @brief Start associated timers
+ *
+ * @return int
+ * @retval 0 Success
+ * @retval <0 Error code
+ */
+GABS_API int gabs_timer_ctx_start(gabs_timer_ctx *ctx);
+
+/**
  * @brief Install (create) timer, that invokes @p cb with @p user_arg when
  * the timeout expires.
  *
@@ -26,12 +76,22 @@ typedef void (*gabs_timer_cb)(gabs_timer, void *);
  * @ref gabs_timer_okay. If not okay, an implementation specific failure
  * occured.
  */
-GABS_API gabs_timer gabs_timer_install(gabs_timer_cb cb, void *user_arg);
+GABS_API gabs_timer gabs_timer_install(gabs_timer_ctx *ctx, gabs_timer_cb cb,
+                                       void *user_arg);
 
 /**
  * @brief Uninstall timer
  *
  * If not already stopped, this will stop the timer before removing it.
+ * Note that although this stops the timer, it does not prevent the timer
+ * handler being invoked after returning from this call. This can happen in the
+ * case where a context switch occurs as (or right before) the handler is
+ * invoked. If the next thread then uninstalls the timer, when it is switched
+ * back the handler will continue to run.
+ *
+ * The only way to be certain that a handler is not invoked after this call,
+ * is to stop the associated @ref gabs_timer_ctx using @ref gabs_timer_ctx_stop
+ * prior to this call.
  *
  * @return int
  * @retval 0 Success

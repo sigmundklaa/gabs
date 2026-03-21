@@ -11,8 +11,6 @@
 #include <unistd.h>
 #include <stdatomic.h>
 
-#include <posix_init.h>
-
 #include <gabs/core/util.h>
 #include <gabs/timer.h>
 
@@ -23,44 +21,24 @@
 #define BIT_ACTIVE (1 << 2) /* Set/unset by worker, unset by client */
 #define BIT_SCHED  (1 << 3) /* Set by client, unset by worker */
 
-#ifndef GABS_CONFIG_TIMER_POSIX_MAX
-#define GABS_CONFIG_TIMER_POSIX_MAX (10)
-#endif
-
-#ifndef GABS_CONFIG_TIMER_INIT_PRIORITY
-#define GABS_CONFIG_TIMER_INIT_PRIORITY (30)
-#endif
-
-struct timer_posix {
-        gabs_timer_cb cb;
-        void *user_arg;
-
-        int fd;
-        atomic_uint state;
-};
-
-static struct timer_posix timers[GABS_CONFIG_TIMER_POSIX_MAX];
-static int event_fd;
-static pthread_t thread_h;
-static atomic_uint work_state;
-
 enum {
         WORK_STATE_NORMAL,
+        WORK_STATE_STOPPED,
         WORK_STATE_EXIT,
 };
 
-static void trigger_reset(void)
+static void trigger_reset(struct gabs_timer_posix_ctx *ctx)
 {
         uint64_t count;
         int size;
 
         count = 1;
 
-        size = write(event_fd, &count, sizeof(count));
+        size = write(ctx->eventfd, &count, sizeof(count));
         assert(size == sizeof(count));
 }
 
-static void to_itimerspec(struct itimerspec *spec, uint32_t time_us)
+static void to_itimerspec(struct itimerspec *spec, uint64_t time_us)
 {
         spec->it_interval.tv_sec = 0;
         spec->it_interval.tv_nsec = 0;
@@ -73,25 +51,7 @@ static void to_itimerspec(struct itimerspec *spec, uint32_t time_us)
         }
 }
 
-static gabs_timer timer_to_id(struct timer_posix *t)
-{
-        if (t == NULL || t > &timers[gabs_array_size(timers) - 1]) {
-                return -1;
-        }
-
-        return t - timers;
-}
-
-static struct timer_posix *timer_from_id(gabs_timer id)
-{
-        if (id >= gabs_array_size(timers) || id < 0) {
-                return NULL;
-        }
-
-        return &timers[id];
-}
-
-static int timer_restart(struct timer_posix *t, uint32_t delay_us)
+static int timer_restart(struct gabs_timer_posix *t, uint64_t delay_us)
 {
         int status;
         struct itimerspec spec;
@@ -105,7 +65,7 @@ static int timer_restart(struct timer_posix *t, uint32_t delay_us)
         status = timerfd_settime(t->fd, 0, &spec, NULL);
 
         mask_set(&t->state, BIT_SCHED);
-        trigger_reset();
+        trigger_reset(t->ctx);
 
         if (status < 0) {
                 return -errno;
@@ -114,12 +74,12 @@ static int timer_restart(struct timer_posix *t, uint32_t delay_us)
         return status;
 }
 
-static bool timer_valid(struct timer_posix *t)
+static bool timer_valid(struct gabs_timer_posix *t)
 {
         return mask_get(&t->state, BIT_USED | BIT_ZOMBIE) == BIT_USED;
 }
 
-static void timer_cleanup(struct timer_posix *t)
+static void timer_cleanup(struct gabs_timer_posix *t)
 {
         close(t->fd);
 
@@ -127,13 +87,14 @@ static void timer_cleanup(struct timer_posix *t)
         atomic_store(&t->state, 0);
 }
 
-static struct timer_posix *timer_from_fd(int fd)
+static struct gabs_timer_posix *timer_from_fd(struct gabs_timer_posix_ctx *ctx,
+                                              int fd)
 {
-        struct timer_posix *t;
+        struct gabs_timer_posix *t;
         size_t i;
 
-        for (i = 0; i < gabs_array_size(timers); i++) {
-                t = &timers[i];
+        for (i = 0; i < gabs_array_size(ctx->timers); i++) {
+                t = &ctx->timers[i];
 
                 if (!timer_valid(t)) {
                         continue;
@@ -147,13 +108,13 @@ static struct timer_posix *timer_from_fd(int fd)
         return NULL;
 }
 
-static struct timer_posix *timer_alloc(void)
+static struct gabs_timer_posix *timer_alloc(struct gabs_timer_posix_ctx *ctx)
 {
-        struct timer_posix *cur;
+        struct gabs_timer_posix *cur;
         size_t i;
 
-        for (i = 0; i < gabs_array_size(timers); i++) {
-                cur = &timers[i];
+        for (i = 0; i < gabs_array_size(ctx->timers); i++) {
+                cur = &ctx->timers[i];
 
                 if (mask_set_strict(&cur->state, BIT_USED)) {
                         return cur;
@@ -163,36 +124,39 @@ static struct timer_posix *timer_alloc(void)
         return NULL;
 }
 
-static struct timer_posix *timer_add(gabs_timer_cb cb, void *user_data)
+static struct gabs_timer_posix *timer_add(struct gabs_timer_posix_ctx *ctx,
+                                          gabs_timer_cb cb, void *user_data)
 {
-        struct timer_posix *t;
+        struct gabs_timer_posix *t;
 
-        t = timer_alloc();
+        t = timer_alloc(ctx);
         if (t == NULL) {
                 return NULL;
         }
 
+        /* Initial state. Safe to update here, will only go from used (with
+         * potentially other bits) to only used set. */
+        atomic_store(&t->state, BIT_USED);
+
+        t->ctx = ctx;
         t->cb = cb;
         t->user_arg = user_data;
-        t->state = 0;
         t->fd = timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK);
 
         if (t->fd < 0) {
                 return NULL;
         }
 
-        mask_set(&t->state, BIT_USED);
-
         return t;
 }
 
-static void timer_alarm(struct timer_posix *t)
+static void timer_alarm(struct gabs_timer_posix *t)
 {
         if (t->cb == NULL) {
                 return;
         }
 
-        t->cb(timer_to_id(t), t->user_arg);
+        t->cb(t, t->user_arg);
 }
 
 static void pfd_push(struct pollfd **arrptr, int fd)
@@ -208,13 +172,14 @@ static void pfd_push(struct pollfd **arrptr, int fd)
 }
 
 /** @brief Prepare pollfds for those timers that require it */
-static void prepare_pfds(struct pollfd **pfdptr)
+static void prepare_pfds(struct gabs_timer_posix_ctx *ctx,
+                         struct pollfd **pfdptr)
 {
         size_t i;
-        struct timer_posix *cur;
+        struct gabs_timer_posix *cur;
 
-        for (i = 0; i < gabs_array_size(timers); i++) {
-                cur = &timers[i];
+        for (i = 0; i < gabs_array_size(ctx->timers); i++) {
+                cur = &ctx->timers[i];
                 if (!mask_test(&cur->state, BIT_USED)) {
                         continue;
                 }
@@ -233,9 +198,10 @@ static void prepare_pfds(struct pollfd **pfdptr)
         }
 }
 
-static void service_pfds(struct pollfd *pfd, size_t count)
+static void service_pfds(struct gabs_timer_posix_ctx *ctx, struct pollfd *pfd,
+                         size_t count)
 {
-        struct timer_posix *cur;
+        struct gabs_timer_posix *cur;
         size_t i;
         uint64_t dummy;
 
@@ -246,7 +212,7 @@ static void service_pfds(struct pollfd *pfd, size_t count)
 
                 (void)read(pfd->fd, &dummy, sizeof(dummy));
 
-                cur = timer_from_fd(pfd->fd);
+                cur = timer_from_fd(ctx, pfd->fd);
                 if (cur == NULL) {
                         continue;
                 }
@@ -261,28 +227,32 @@ static void service_pfds(struct pollfd *pfd, size_t count)
         }
 }
 
-static void *worker(void *arg)
+static void *worker(void *ctx_arg)
 {
         int num_ready;
         size_t count;
         uint64_t dummy;
         unsigned int state;
+        struct gabs_timer_posix_ctx *ctx = ctx_arg;
         struct pollfd *pfd;
-        struct pollfd pfds[gabs_array_size(timers)];
-
-        (void)arg;
+        struct pollfd pfds[gabs_array_size(ctx->timers)];
 
         for (;;) {
                 pfd = pfds;
-                pfd_push(&pfd, event_fd);
+                pfd_push(&pfd, ctx->eventfd);
 
-                state = atomic_load(&work_state);
+                state = atomic_load(&ctx->work_state);
 
                 if (state == WORK_STATE_EXIT) {
+                        atomic_store(&ctx->stopped, true);
                         break;
+                } else if (state == WORK_STATE_STOPPED) {
+                        atomic_store(&ctx->stopped, true);
+                } else {
+                        atomic_store(&ctx->stopped, false);
+                        prepare_pfds(ctx, &pfd);
                 }
 
-                prepare_pfds(&pfd);
                 count = pfd - pfds;
 
                 num_ready = poll(pfds, count, -1);
@@ -297,38 +267,111 @@ static void *worker(void *arg)
                         continue;
                 }
 
-                service_pfds(pfd, count);
+                service_pfds(ctx, pfd, count);
         }
 
         return NULL;
 }
 
-bool gabs_timer_okay(gabs_timer id)
+int gabs_timer_ctx_init(struct gabs_timer_posix_ctx *ctx)
 {
-        return timer_from_id(id) != NULL;
+        int status;
+
+        atomic_store(&ctx->work_state, WORK_STATE_STOPPED);
+        atomic_store(&ctx->stopped, true);
+
+        ctx->eventfd = eventfd(0, EFD_SEMAPHORE);
+        if (ctx->eventfd < 0) {
+                return -errno;
+        }
+
+        status = pthread_create(&ctx->thread, NULL, worker, ctx);
+        if (status != 0) {
+                (void)close(ctx->eventfd);
+                status = -status;
+        }
+
+        return status;
 }
 
-gabs_timer gabs_timer_install(gabs_timer_cb cb, void *user_data)
+int gabs_timer_ctx_deinit(struct gabs_timer_posix_ctx *ctx)
 {
-        return timer_to_id(timer_add(cb, user_data));
-}
+        atomic_store(&ctx->work_state, WORK_STATE_EXIT);
+        trigger_reset(ctx);
 
-int gabs_timer_uninstall(gabs_timer id)
-{
-        (void)gabs_timer_stop(id);
-
-        /* Perform cleanup when worker is done */
-        mask_set(&timer_from_id(id)->state, BIT_ZOMBIE);
+        (void)pthread_join(ctx->thread, NULL);
+        (void)close(ctx->eventfd);
 
         return 0;
 }
 
-int gabs_timer_start(gabs_timer id, uint64_t delay_us)
+int gabs_timer_ctx_stop(struct gabs_timer_posix_ctx *ctx)
+{
+        unsigned int expected;
+
+        expected = WORK_STATE_NORMAL;
+        while (!atomic_compare_exchange_weak(&ctx->work_state, &expected,
+                                             WORK_STATE_STOPPED)) {
+                if (expected == WORK_STATE_STOPPED) {
+                        return 0;
+                }
+
+                if (expected == WORK_STATE_EXIT) {
+                        return -EINVAL;
+                }
+        }
+
+        /* TODO: This waiting could be improved with a futex */
+        while (!atomic_load_explicit(&ctx->stopped, memory_order_relaxed)) {
+        }
+
+        return 0;
+}
+
+int gabs_timer_ctx_start(struct gabs_timer_posix_ctx *ctx)
+{
+        unsigned int expected;
+
+        expected = WORK_STATE_STOPPED;
+
+        while (!atomic_compare_exchange_weak(&ctx->work_state, &expected,
+                                             WORK_STATE_NORMAL)) {
+                if (expected == WORK_STATE_NORMAL) {
+                        break;
+                }
+
+                if (expected == WORK_STATE_EXIT) {
+                        return -EINVAL;
+                }
+        }
+
+        return 0;
+}
+
+bool gabs_timer_okay(struct gabs_timer_posix *t)
+{
+        return t != NULL;
+}
+
+gabs_timer gabs_timer_install(struct gabs_timer_posix_ctx *ctx,
+                              gabs_timer_cb cb, void *user_data)
+{
+        return timer_add(ctx, cb, user_data);
+}
+
+int gabs_timer_uninstall(struct gabs_timer_posix *t)
+{
+        (void)gabs_timer_stop(t);
+
+        /* Perform cleanup when worker is done */
+        mask_set(&t->state, BIT_ZOMBIE);
+
+        return 0;
+}
+
+int gabs_timer_start(struct gabs_timer_posix *t, uint64_t delay_us)
 {
         int status;
-        struct timer_posix *t;
-
-        t = timer_from_id(id);
 
         /* Already scheduled or running */
         if (mask_get(&t->state, BIT_ACTIVE | BIT_SCHED)) {
@@ -340,18 +383,15 @@ int gabs_timer_start(gabs_timer id, uint64_t delay_us)
         return status;
 }
 
-int gabs_timer_restart(gabs_timer id, uint64_t delay_us)
+int gabs_timer_restart(struct gabs_timer_posix *t, uint64_t delay_us)
 {
-        return timer_restart(timer_from_id(id), delay_us);
+        return timer_restart(t, delay_us);
 }
 
-int gabs_timer_stop(gabs_timer id)
+int gabs_timer_stop(struct gabs_timer_posix *t)
 {
         int status;
         struct itimerspec spec;
-        struct timer_posix *t;
-
-        t = timer_from_id(id);
 
         mask_clear(&t->state, BIT_ACTIVE | BIT_SCHED);
 
@@ -363,33 +403,12 @@ int gabs_timer_stop(gabs_timer id)
                 status = -errno;
         }
 
-        trigger_reset();
+        trigger_reset(t->ctx);
 
         return status;
 }
 
-bool gabs_timer_active(gabs_timer id)
+bool gabs_timer_active(struct gabs_timer_posix *t)
 {
-        return mask_test(&timer_from_id(id)->state, BIT_ACTIVE);
-}
-
-POSIX_INIT(GABS_CONFIG_TIMER_INIT_PRIORITY)
-{
-        work_state = WORK_STATE_NORMAL;
-
-        event_fd = eventfd(0, EFD_SEMAPHORE);
-        if (event_fd < 0) {
-                return;
-        }
-
-        (void)pthread_create(&thread_h, NULL, worker, NULL);
-}
-
-POSIX_DEINIT(GABS_CONFIG_TIMER_INIT_PRIORITY)
-{
-        atomic_store(&work_state, WORK_STATE_EXIT);
-        trigger_reset();
-
-        (void)pthread_join(thread_h, NULL);
-        (void)close(event_fd);
+        return mask_test(&t->state, BIT_ACTIVE);
 }
