@@ -376,54 +376,6 @@ int gabs_timer_ctx_deinit(struct gabs_timer_posix_ctx *ctx)
         return 0;
 }
 
-int gabs_timer_ctx_stop(struct gabs_timer_posix_ctx *ctx)
-{
-        unsigned int expected;
-
-        expected = WORK_STATE_NORMAL;
-        while (!atomic_compare_exchange_weak(&ctx->work_state, &expected,
-                                             WORK_STATE_STOPPED)) {
-                if (expected == WORK_STATE_STOPPED) {
-                        return 0;
-                }
-
-                if (expected == WORK_STATE_EXIT) {
-                        return -EINVAL;
-                }
-        }
-
-        trigger_reset(ctx);
-
-        /* TODO: This waiting could be improved with a futex */
-        while (!atomic_load_explicit(&ctx->stopped, memory_order_relaxed)) {
-        }
-
-        return 0;
-}
-
-int gabs_timer_ctx_start(struct gabs_timer_posix_ctx *ctx)
-{
-        unsigned int expected;
-
-        expected = WORK_STATE_STOPPED;
-
-        while (!atomic_load_explicit(&ctx->stopped, memory_order_relaxed)) {
-        }
-
-        while (!atomic_compare_exchange_weak(&ctx->work_state, &expected,
-                                             WORK_STATE_NORMAL)) {
-                if (expected == WORK_STATE_NORMAL) {
-                        break;
-                }
-
-                if (expected == WORK_STATE_EXIT) {
-                        return -EINVAL;
-                }
-        }
-
-        return 0;
-}
-
 bool gabs_timer_okay(struct gabs_timer_posix *t)
 {
         return t != NULL;

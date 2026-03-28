@@ -18,13 +18,10 @@ typedef void (*gabs_timer_cb)(gabs_timer, void *);
 /**
  * @brief Initialize a timer context.
  *
- * Each timer context can have multiple timers associated with it. It is
- * primarily used to ensure that the timers can be safely stopped without
- * running the risk of spurious timer alarms after stopping/uninstalling the
- * individual timer.
- *
- * This functionality is especially important in cases where the timer is
- * associated with an object that gets deleted after uninstalling.
+ * A timer context is a shared context for multiple timers, often holding
+ * shared state data (such as thread handles). Any call to
+ * @ref gabs_timer_install must be made with a pointer to a timer context
+ * initialized by this function.
  *
  * @return int
  * @retval 0 Success
@@ -43,27 +40,6 @@ GABS_API int gabs_timer_ctx_init(gabs_timer_ctx *ctx);
  * @retval <0 Error code
  */
 GABS_API int gabs_timer_ctx_deinit(gabs_timer_ctx *ctx);
-
-/**
- * @brief Stop all associated timers
- *
- * This ensures that no timers will fire their associated callbacks after this
- * function returns.
- *
- * @return int
- * @retval 0 Success
- * @retval <0 Error code
- */
-GABS_API int gabs_timer_ctx_stop(gabs_timer_ctx *ctx);
-
-/**
- * @brief Start associated timers
- *
- * @return int
- * @retval 0 Success
- * @retval <0 Error code
- */
-GABS_API int gabs_timer_ctx_start(gabs_timer_ctx *ctx);
 
 /**
  * @brief Install (create) timer, that invokes @p cb with @p user_arg when
