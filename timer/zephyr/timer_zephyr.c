@@ -160,7 +160,8 @@ bool gabs_timer_active(gabs_timer timer)
 {
         struct timer_info *info = timer;
 
-        return k_work_delayable_busy_get(&info->dwork);
+        return k_work_delayable_busy_get(&info->dwork) &
+               ~(K_WORK_CANCELING | K_WORK_FLUSHING);
 }
 
 int gabs_timer_ctx_init(struct gabs_timer_zephyr_ctx *ctx)
