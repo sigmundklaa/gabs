@@ -22,6 +22,7 @@ using atomic_bool = std::atomic_bool;
 #endif
 
 #include <gabs/core/util.h>
+#include <gabs/mutex.h>
 
 GABS_BEGIN_DECL
 
@@ -31,6 +32,7 @@ struct gabs_timer_posix {
 
         int fd;
         atomic_uint state;
+        gabs_mutex lock;
 
         struct gabs_timer_posix_ctx *ctx;
 };

@@ -83,15 +83,8 @@ GABS_API gabs_timer gabs_timer_install(gabs_timer_ctx *ctx, gabs_timer_cb cb,
  * @brief Uninstall timer
  *
  * If not already stopped, this will stop the timer before removing it.
- * Note that although this stops the timer, it does not prevent the timer
- * handler being invoked after returning from this call. This can happen in the
- * case where a context switch occurs as (or right before) the handler is
- * invoked. If the next thread then uninstalls the timer, when it is switched
- * back the handler will continue to run.
- *
- * The only way to be certain that a handler is not invoked after this call,
- * is to stop the associated @ref gabs_timer_ctx using @ref gabs_timer_ctx_stop
- * prior to this call.
+ * It is safe to uninstall a timer from within the associated callback
+ * of the timer.
  *
  * @return int
  * @retval 0 Success
@@ -135,6 +128,10 @@ GABS_API int gabs_timer_restart(gabs_timer timer, uint64_t delay_us);
 
 /**
  * @brief Stop @p timer
+ *
+ * Note that this only requests a stop, and the timer may not be fully
+ * stopped after the return of this function. This can occur if the timer
+ * is in the process of firing when it gets the stop request.
  *
  * @return int
  * @retval 0 Success

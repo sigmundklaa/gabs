@@ -30,6 +30,10 @@ enum {
         WORK_STATE_EXIT,
 };
 
+/* Thread local variable used to detect if API calls are made from inside
+ * a timer callback. This is used to prevent recursive locking attempts. */
+static __thread struct gabs_timer_posix *firing = NULL;
+
 static void trigger_reset(struct gabs_timer_posix_ctx *ctx)
 {
         uint64_t count;
@@ -155,13 +159,54 @@ static struct gabs_timer_posix *timer_add(struct gabs_timer_posix_ctx *ctx,
         return t;
 }
 
+/* Invoke timer callback.
+ *
+ * This function acquires the associated lock, and double-checks that it has
+ * not been cancelled prior to obtaining the lock. This way, whenever
+ * synchronized stopping is required (such as uninstall), this can be achieved
+ * by requesting a stop with the lock held.
+ */
 static void timer_alarm(struct gabs_timer_posix *t)
 {
+        firing = t;
+
         if (t->cb == NULL) {
+                goto exit;
+        }
+
+        (void)gabs_mutex_lock(&t->lock, GABS_TIMEOUT_MAX);
+        {
+                if (mask_test(&t->state, BIT_ACTIVE)) {
+                        t->cb(t, t->user_arg);
+                }
+        }
+        (void)gabs_mutex_unlock(&t->lock);
+
+exit:
+        firing = NULL;
+}
+
+/* Acquire the lock for the associated timer, taking into account re-entry from
+ * the timer callback function.
+ */
+static void timer_lock(struct gabs_timer_posix *t)
+{
+        if (firing == t) {
                 return;
         }
 
-        t->cb(t, t->user_arg);
+        (void)gabs_mutex_lock(&t->lock, GABS_TIMEOUT_MAX);
+}
+
+/* Release the lock for the associated timer, taking into account re-entry from
+ * the timer callback function. */
+static void timer_unlock(struct gabs_timer_posix *t)
+{
+        if (firing == t) {
+                return;
+        }
+
+        (void)gabs_mutex_unlock(&t->lock);
 }
 
 static void pfd_push(struct pollfd **arrptr, int fd)
@@ -231,11 +276,6 @@ static void service_pfds(struct gabs_timer_posix_ctx *ctx, struct pollfd *pfd,
                 if (cur == NULL) {
                         gabs_log_errf(logger, "Unrecognized timer fd: %i",
                                       pfd->fd);
-                        continue;
-                }
-
-                /* Reset by client */
-                if (!mask_test(&cur->state, BIT_ACTIVE)) {
                         continue;
                 }
 
@@ -397,7 +437,13 @@ gabs_timer gabs_timer_install(struct gabs_timer_posix_ctx *ctx,
 
 int gabs_timer_uninstall(struct gabs_timer_posix *t)
 {
-        (void)gabs_timer_stop(t);
+        /* Ensure timer is fully stopepd and can not fire after releasing
+         * the lock. */
+        timer_lock(t);
+        {
+                (void)gabs_timer_stop(t);
+        }
+        timer_unlock(t);
 
         /* Perform cleanup when worker is done */
         mask_set(&t->state, BIT_ZOMBIE);
