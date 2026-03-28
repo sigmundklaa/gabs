@@ -41,7 +41,6 @@ struct gabs_timer_posix_ctx {
         pthread_t thread;
         int eventfd;
         atomic_uint work_state;
-        atomic_bool stopped;
         struct gabs_timer_posix timers[GABS_CONFIG_TIMER_POSIX_MAX];
 };
 

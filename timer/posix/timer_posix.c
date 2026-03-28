@@ -26,7 +26,6 @@ GABS_LOGGER_DECLARE(logger, timer);
 
 enum {
         WORK_STATE_NORMAL,
-        WORK_STATE_STOPPED,
         WORK_STATE_EXIT,
 };
 
@@ -302,14 +301,10 @@ static void *worker(void *ctx_arg)
 
                 if (state == WORK_STATE_EXIT) {
                         gabs_log_inff(logger, "Exiting timer worker thread");
-                        atomic_store(&ctx->stopped, true);
                         break;
-                } else if (state == WORK_STATE_STOPPED) {
-                        atomic_store(&ctx->stopped, true);
-                } else {
-                        atomic_store(&ctx->stopped, false);
-                        prepare_pfds(ctx, &pfd);
                 }
+
+                prepare_pfds(ctx, &pfd);
 
                 count = pfd - pfds;
 
@@ -344,8 +339,7 @@ int gabs_timer_ctx_init(struct gabs_timer_posix_ctx *ctx)
 {
         int status;
 
-        atomic_store(&ctx->work_state, WORK_STATE_STOPPED);
-        atomic_store(&ctx->stopped, true);
+        atomic_store(&ctx->work_state, WORK_STATE_NORMAL);
 
         ctx->eventfd = eventfd(0, EFD_SEMAPHORE);
         if (ctx->eventfd < 0) {
