@@ -40,7 +40,7 @@ struct gabs_log_zephyr_data {
 #define GABS_LOGGER_DECLARE(handle_, name_)                                    \
         LOG_MODULE_DECLARE(gabs);                                              \
         LOG_INSTANCE_REGISTER(gabs, name_, LOG_LEVEL_DBG);                     \
-        GABS_LOGGER_ZEPHYR_DEFINE(handle_, name_)
+        GABS_LOGGER_ZEPHYR_DECLARE(handle_, gabs, name_)
 
 #define gabs_log_zephyr__(handle_, level_, ...)                                \
         do {                                                                   \
