@@ -38,7 +38,7 @@ struct gabs_log_zephyr_data {
  * @brief Create logger in gabs default namespace
  */
 #define GABS_LOGGER_DECLARE(handle_, name_)                                    \
-        LOG_MODULE_DECLARE(gabs);                                              \
+        LOG_MODULE_DECLARE(gabs, CONFIG_GABS_LOG_LEVEL);                       \
         LOG_INSTANCE_REGISTER(gabs, name_, LOG_LEVEL_DBG);                     \
         GABS_LOGGER_ZEPHYR_DECLARE(handle_, gabs, name_)
 
