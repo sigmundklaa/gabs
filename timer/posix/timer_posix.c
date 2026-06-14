@@ -89,10 +89,14 @@ static bool timer_valid(struct gabs_timer_posix *t)
 
 static void timer_cleanup(struct gabs_timer_posix *t)
 {
-        close(t->fd);
+        if (t->fd >= 0) {
+                close(t->fd);
+        }
 
         /* Reset state to default */
         atomic_store(&t->state, 0);
+
+        (void)gabs_mutex_deinit(&t->lock);
 }
 
 static struct gabs_timer_posix *timer_from_fd(struct gabs_timer_posix_ctx *ctx,
@@ -136,9 +140,16 @@ static struct gabs_timer_posix *timer_add(struct gabs_timer_posix_ctx *ctx,
                                           gabs_timer_cb cb, void *user_data)
 {
         struct gabs_timer_posix *t;
+        int status;
 
         t = timer_alloc(ctx);
         if (t == NULL) {
+                return NULL;
+        }
+
+        status = gabs_mutex_init(&t->lock);
+        if (status != 0) {
+                atomic_store(&t->state, 0);
                 return NULL;
         }
 
@@ -152,6 +163,7 @@ static struct gabs_timer_posix *timer_add(struct gabs_timer_posix_ctx *ctx,
         t->fd = timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK);
 
         if (t->fd < 0) {
+                timer_cleanup(t);
                 return NULL;
         }
 
