@@ -3,6 +3,7 @@
 #include <pthread.h>
 #include <assert.h>
 #include <stdbool.h>
+#include <string.h>
 #include <stdlib.h>
 #include <sys/timerfd.h>
 #include <sys/eventfd.h>
@@ -146,6 +147,8 @@ static struct gabs_timer_posix *timer_add(struct gabs_timer_posix_ctx *ctx,
         if (t == NULL) {
                 return NULL;
         }
+
+        (void)memset(t, 0, sizeof(*t));
 
         status = gabs_mutex_init(&t->lock);
         if (status != 0) {
@@ -350,6 +353,8 @@ static void *worker(void *ctx_arg)
 int gabs_timer_ctx_init(struct gabs_timer_posix_ctx *ctx)
 {
         int status;
+
+        (void)memset(ctx, 0, sizeof(*ctx));
 
         atomic_store(&ctx->work_state, WORK_STATE_NORMAL);
 
