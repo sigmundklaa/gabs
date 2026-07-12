@@ -25,11 +25,16 @@ struct gabs_log_zephyr_data {
  * application code to create a logger that directs its output to a Zephyr
  * instance.
  */
+#if CONFIG_LOG
 #define GABS_LOGGER_ZEPHYR_DECLARE(handle_, module_, inst_)                    \
         static struct gabs_log_zephyr_data handle_##data__ = {                 \
                 LOG_INSTANCE_PTR(module_, inst_),                              \
         };                                                                     \
         static const gabs_logger_h *handle_ = &handle_##data__.handle
+#else
+#define GABS_LOGGER_ZEPHYR_DECLARE(handle_, module_, inst_)                    \
+        static const gabs_logger_h *handle_ = NULL
+#endif
 
 #define GABS_LOGGER_ZEPHYR_GET(handle_)                                        \
         gabs_container_of(handle_, struct gabs_log_zephyr_data, handle)->ptr
