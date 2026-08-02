@@ -2,11 +2,29 @@
 #ifndef GABS_HANDLE_HH__
 #define GABS_HANDLE_HH__
 
+#include <cstddef>
+#include <new>
+
 #include <gabs/cc/include_guard.hh>
 #include <gabs/core/handle.h>
 
+#ifndef __GNUC__
+#error "Only GCC is currently supported"
+#endif
+
 namespace gabs::core
 {
+
+template <class Container, typename T>
+Container &container_of(const T *ptr, T Container::*member)
+{
+        Container *nullcont = nullptr;
+        auto offset = reinterpret_cast<std::ptrdiff_t>(&(nullcont->*member));
+
+        return *const_cast<Container *>(
+                std::launder(reinterpret_cast<const Container *>(
+                        reinterpret_cast<const char *>(ptr) - offset)));
+}
 
 template <typename Handle> class simple_handle_trait
 {
@@ -20,7 +38,7 @@ template <typename Handle> class simple_handle_trait
 
         static simple_handle_trait *from(const handle_type *h)
         {
-                return gabs_container_of(h, simple_handle_trait, handle_);
+                return &container_of(h, &simple_handle_trait::handle_);
         }
 
       protected:
