@@ -1,0 +1,6 @@
+tests:
+  libraries.gabs.api:
+    tags:
+      - gabs
+    integration_platforms:
+      - native_sim
