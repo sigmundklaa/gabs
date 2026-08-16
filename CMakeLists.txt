@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 project(gabs)
 
-option(GABS_BUILD_TESTS "Build the gabs API conformance tests" OFF)
-
 add_library(gabs)
 
 add_library(gabs_iface INTERFACE)
@@ -24,9 +22,3 @@ add_subdirectory(timer)
 add_subdirectory(testing)
 
 gabs_provide(gabs-timer-posix)
-
-if(GABS_BUILD_TESTS)
-    enable_testing()
-
-    add_subdirectory(tests)
-endif()
