@@ -14,9 +14,9 @@
 
 /* `ZTEST_F` requires the fixture to be named `struct <suite>_fixture`, so the
  * user fixture is inherited rather than aliased. It is constructed in
- * `before` rather than `setup` so that each case gets a fresh one, matching
- * Catch2. Placement new into static storage keeps it off the heap, which may
- * not exist at all on the target. */
+ * `before` rather than `setup` so that each case gets a fresh one. Placement
+ * new into static storage keeps it off the heap, which may not exist at all
+ * on the target. */
 #define GABS_SUITE_F(suite_, fixture_)                                         \
         struct suite_##_fixture : fixture_ {                                   \
         };                                                                     \

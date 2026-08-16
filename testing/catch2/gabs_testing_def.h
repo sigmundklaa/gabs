@@ -16,14 +16,12 @@
         struct gabs_test_catch2_fixture__##suite_ {                            \
         }
 
-/* Catch2 constructs the fixture once per case, which is the behaviour the
- * ztest implementation reproduces with its before/after hooks. */
 #define GABS_TEST(suite_, name_)                                               \
         TEST_CASE_METHOD(gabs_test_catch2_fixture__##suite_,                   \
                          #suite_ "::" #name_, "[" #suite_ "]")
 
-/* `fixture` is marked as possibly unused, as ztest permits a case of a
- * fixtured suite to ignore it. */
+/* `fixture` is marked as possibly unused, since a case of a fixtured suite
+ * is permitted to ignore it. */
 #define GABS_TEST_F(suite_, name_)                                             \
         static void gabs_test_catch2_body__##suite_##_##name_(                 \
                 struct gabs_test_catch2_fixture__##suite_ *fixture);           \
@@ -53,8 +51,8 @@
 #define GABS_EXPECT_NULL(ptr_)     CHECK((ptr_) == nullptr)
 #define GABS_EXPECT_NOT_NULL(ptr_) CHECK((ptr_) != nullptr)
 
-/* ztest supplies its own reason for these, so the message is synthesized
- * here rather than taken from the caller. */
+/* No message is accepted from the caller, so one is synthesized here from
+ * the call site instead. */
 #define GABS_TEST_FAIL() FAIL("explicit failure at " __FILE__ ":" << __LINE__)
 #define GABS_TEST_SKIP() SKIP("skipped at " __FILE__ ":" << __LINE__)
 
