@@ -1,5 +1,5 @@
 tests:
-  libraries.gabs.api:
+  libraries.gabs.semaphore:
     tags:
       - gabs
     integration_platforms:
