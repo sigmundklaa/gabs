@@ -16,17 +16,17 @@ namespace
 
 constexpr uint64_t finite_timeout = 1000;
 
-class mutex_fixture
+class mutex_lock_fixture
 {
       public:
-        mutex_fixture()
+        mutex_lock_fixture()
         {
                 GABS_ASSERT_EQ(gabs_mutex_init(&lock), 0);
         }
 
         /* `EXPECT` rather than `ASSERT`: a failing `ASSERT` may unwind by
          * throwing, which would terminate from a destructor. */
-        ~mutex_fixture()
+        ~mutex_lock_fixture()
         {
                 GABS_EXPECT_EQ(gabs_mutex_deinit(&lock), 0);
         }
@@ -36,7 +36,10 @@ class mutex_fixture
 
 } // namespace
 
-GABS_SUITE_F(mutex, mutex_fixture);
+/* Not named `mutex_fixture`: the ztest backend's GABS_SUITE_F generates a
+ * wrapper type named `<suite>_fixture`, which for this suite is exactly
+ * `mutex_fixture` and would collide with a fixture named that. */
+GABS_SUITE_F(mutex, mutex_lock_fixture);
 
 GABS_TEST_F(mutex, lock_forever_then_unlock)
 {

@@ -10,6 +10,15 @@
 
 #include <zephyr/ztest.h>
 
+#ifdef CONFIG_MINIMAL_LIBCPP
+/* The mandatory placement-new form is omitted from Zephyr's minimal C++
+ * library's <new>, so it is supplied here for the placement new used below. */
+inline void *operator new(std::size_t, void *ptr) noexcept
+{
+        return ptr;
+}
+#endif /* CONFIG_MINIMAL_LIBCPP */
+
 #define GABS_SUITE(suite_) ZTEST_SUITE(suite_, NULL, NULL, NULL, NULL, NULL)
 
 /* `ZTEST_F` requires the fixture to be named `struct <suite>_fixture`, so the
