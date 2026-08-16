@@ -1,4 +1,6 @@
 
+gabs_require(gabs-timer gabs-log)
+
 add_executable(gabs-tests-timer)
 target_sources(gabs-tests-timer PRIVATE timer.cc)
 

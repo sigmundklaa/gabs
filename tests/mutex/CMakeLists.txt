@@ -1,4 +1,6 @@
 
+gabs_require(gabs-mutex)
+
 add_executable(gabs-tests-mutex)
 target_sources(gabs-tests-mutex PRIVATE mutex.cc)
 

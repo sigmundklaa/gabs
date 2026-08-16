@@ -1,4 +1,6 @@
 
+gabs_require(gabs-semaphore)
+
 add_executable(gabs-tests-semaphore)
 target_sources(gabs-tests-semaphore PRIVATE semaphore.cc)
 
