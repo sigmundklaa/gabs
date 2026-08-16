@@ -40,17 +40,17 @@ gabs::log::spdlog_logger &capture_logger()
 
 } // namespace
 
-void gabs_test_log_capture_reset(void)
+void gabs_test_log_reset(void)
 {
         captured_messages().clear();
 }
 
-const gabs_logger_h *gabs_test_log_capture_handle(void)
+const gabs_logger_h *gabs_test_log_handle(void)
 {
         return capture_logger();
 }
 
-bool gabs_test_log_capture_contains(const char *needle)
+bool gabs_test_log_contains(const char *needle)
 {
         for (const auto &msg : captured_messages()) {
                 if (msg.find(needle) != std::string::npos) {

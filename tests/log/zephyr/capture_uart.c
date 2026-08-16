@@ -8,7 +8,7 @@
 #include <zephyr/drivers/uart.h>
 #include <zephyr/drivers/serial/uart_emul.h>
 
-GABS_LOGGER_DECLARE(gabs_test_log_capture_logger, log_capture);
+GABS_LOGGER_DECLARE(gabs_test_log_logger, log_capture);
 
 static const struct device *const capture_uart =
         DEVICE_DT_GET(DT_NODELABEL(gabs_test_log_uart));
@@ -16,15 +16,15 @@ static const struct device *const capture_uart =
 static uint8_t capture_buf[4096];
 static size_t capture_len;
 
-void gabs_test_log_capture_reset(void)
+void gabs_test_log_reset(void)
 {
         (void)uart_emul_flush_tx_data(capture_uart);
         capture_len = 0;
 }
 
-const gabs_logger_h *gabs_test_log_capture_handle(void)
+const gabs_logger_h *gabs_test_log_handle(void)
 {
-        return gabs_test_log_capture_logger;
+        return gabs_test_log_logger;
 }
 
 static void capture_drain(void)
@@ -40,7 +40,7 @@ static void capture_drain(void)
         capture_len += got;
 }
 
-bool gabs_test_log_capture_contains(const char *needle)
+bool gabs_test_log_contains(const char *needle)
 {
         size_t needle_len = strlen(needle);
         size_t i;

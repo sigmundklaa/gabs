@@ -15,43 +15,43 @@ GABS_SUITE(log);
 
 GABS_TEST(log, debug_message_is_logged)
 {
-        gabs_test_log_capture_reset();
-        gabs_log_dbgf(gabs_test_log_capture_handle(), "debug marker 1");
+        gabs_test_log_reset();
+        gabs_log_dbgf(gabs_test_log_handle(), "debug marker 1");
 
-        GABS_ASSERT_TRUE(gabs_test_log_capture_contains("debug marker 1"));
+        GABS_ASSERT_TRUE(gabs_test_log_contains("debug marker 1"));
 }
 
 GABS_TEST(log, info_message_is_logged)
 {
-        gabs_test_log_capture_reset();
-        gabs_log_inff(gabs_test_log_capture_handle(), "info marker 2");
+        gabs_test_log_reset();
+        gabs_log_inff(gabs_test_log_handle(), "info marker 2");
 
-        GABS_ASSERT_TRUE(gabs_test_log_capture_contains("info marker 2"));
+        GABS_ASSERT_TRUE(gabs_test_log_contains("info marker 2"));
 }
 
 GABS_TEST(log, warn_message_is_logged)
 {
-        gabs_test_log_capture_reset();
-        gabs_log_wrnf(gabs_test_log_capture_handle(), "warn marker 3");
+        gabs_test_log_reset();
+        gabs_log_wrnf(gabs_test_log_handle(), "warn marker 3");
 
-        GABS_ASSERT_TRUE(gabs_test_log_capture_contains("warn marker 3"));
+        GABS_ASSERT_TRUE(gabs_test_log_contains("warn marker 3"));
 }
 
 GABS_TEST(log, error_message_is_logged)
 {
-        gabs_test_log_capture_reset();
-        gabs_log_errf(gabs_test_log_capture_handle(), "error marker 4");
+        gabs_test_log_reset();
+        gabs_log_errf(gabs_test_log_handle(), "error marker 4");
 
-        GABS_ASSERT_TRUE(gabs_test_log_capture_contains("error marker 4"));
+        GABS_ASSERT_TRUE(gabs_test_log_contains("error marker 4"));
 }
 
 GABS_TEST(log, variadic_arguments_are_formatted_into_message)
 {
-        gabs_test_log_capture_reset();
-        gabs_log_errf(gabs_test_log_capture_handle(),
+        gabs_test_log_reset();
+        gabs_log_errf(gabs_test_log_handle(),
                       "int=%d str=%s float=%.2f", 42, "text", 3.5);
 
-        GABS_ASSERT_TRUE(gabs_test_log_capture_contains(
+        GABS_ASSERT_TRUE(gabs_test_log_contains(
                 "int=42 str=text float=3.50"));
 }
 
