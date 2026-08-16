@@ -3,6 +3,8 @@
 
 #include <gabs/log.h>
 
+#include "log_capture.h"
+
 /* `GABS_LOGGER_DECLARE` expands to file-scope declarations (module/instance
  * registration on the Zephyr backend), so loggers are declared here rather
  * than inside a test body. */
@@ -11,30 +13,46 @@ GABS_LOGGER_DECLARE(log_test_other_logger, log_tests_other);
 
 GABS_SUITE(log);
 
-GABS_TEST(log, debug_logs_literal_message)
+GABS_TEST(log, debug_message_is_logged)
 {
-        gabs_log_dbgf(log_test_logger, "literal debug message");
+        gabs_test_log_capture_reset();
+        gabs_log_dbgf(gabs_test_log_capture_handle(), "debug marker 1");
+
+        GABS_ASSERT_TRUE(gabs_test_log_capture_contains("debug marker 1"));
 }
 
-GABS_TEST(log, info_logs_literal_message)
+GABS_TEST(log, info_message_is_logged)
 {
-        gabs_log_inff(log_test_logger, "literal info message");
+        gabs_test_log_capture_reset();
+        gabs_log_inff(gabs_test_log_capture_handle(), "info marker 2");
+
+        GABS_ASSERT_TRUE(gabs_test_log_capture_contains("info marker 2"));
 }
 
-GABS_TEST(log, warn_logs_literal_message)
+GABS_TEST(log, warn_message_is_logged)
 {
-        gabs_log_wrnf(log_test_logger, "literal warn message");
+        gabs_test_log_capture_reset();
+        gabs_log_wrnf(gabs_test_log_capture_handle(), "warn marker 3");
+
+        GABS_ASSERT_TRUE(gabs_test_log_capture_contains("warn marker 3"));
 }
 
-GABS_TEST(log, error_logs_literal_message)
+GABS_TEST(log, error_message_is_logged)
 {
-        gabs_log_errf(log_test_logger, "literal error message");
+        gabs_test_log_capture_reset();
+        gabs_log_errf(gabs_test_log_capture_handle(), "error marker 4");
+
+        GABS_ASSERT_TRUE(gabs_test_log_capture_contains("error marker 4"));
 }
 
-GABS_TEST(log, formats_variadic_arguments)
+GABS_TEST(log, variadic_arguments_are_formatted_into_message)
 {
-        gabs_log_errf(log_test_logger, "int=%d str=%s float=%.2f", 42,
-                      "text", 3.5);
+        gabs_test_log_capture_reset();
+        gabs_log_errf(gabs_test_log_capture_handle(),
+                      "int=%d str=%s float=%.2f", 42, "text", 3.5);
+
+        GABS_ASSERT_TRUE(gabs_test_log_capture_contains(
+                "int=42 str=text float=3.50"));
 }
 
 GABS_TEST(log, distinctly_declared_loggers_are_independently_usable)

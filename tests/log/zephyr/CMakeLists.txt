@@ -6,4 +6,9 @@ project(gabs_tests_log)
 
 gabs_require(gabs-testing gabs-log)
 
-target_sources(app PRIVATE ${CMAKE_CURRENT_LIST_DIR}/../log.cc)
+target_sources(
+    app
+    PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}/../log.cc
+        capture_uart.c
+)
