@@ -8,6 +8,8 @@ config APP_LINK_WITH_GABS_IFACE
     default y
     depends on GABS
 
+rsource "../testing/ztest/Kconfig"
+
 module = GABS
 module-str = gabs
 source "subsys/logging/Kconfig.template.log_config"

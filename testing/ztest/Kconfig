@@ -1,0 +1,15 @@
+
+config GABS_TEST
+    bool "Enable gabs API conformance tests (ztest backend)"
+    select ZTEST
+    select CPP
+    select REQUIRES_FULL_LIBCPP
+    help
+      Enables every Kconfig option required to build gabs' platform-
+      agnostic API conformance tests against the ztest backend: the
+      ztest framework itself, C++ support, and a full C++ standard
+      library (needed for the placement new GABS_SUITE_F relies on).
+
+      The C++ standard itself (CONFIG_STD_CPP17) is a choice symbol and
+      can't be forced by select here, so the application must still pick
+      it in its own prj.conf.
