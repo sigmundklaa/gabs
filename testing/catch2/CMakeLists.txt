@@ -7,5 +7,5 @@ gabs_implement(
         .
 )
 
-gabs_get_lib(lib gabs-testing-catch2)
-target_link_libraries(${lib} INTERFACE Catch2::Catch2WithMain)
+gabs_get_iface(iface gabs-testing-catch2)
+target_link_libraries(${iface} INTERFACE Catch2::Catch2WithMain)
