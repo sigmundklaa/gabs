@@ -7,9 +7,8 @@
 #include <memory>
 #include <cstring>
 
-#include <gabs/alloc.h>
+#include <gabs/alloc.hh>
 #include <gabs/cc/handle.hh>
-#include <gabs/alloc/dynamic.hh>
 
 namespace gabs::memory
 {
@@ -27,16 +26,15 @@ int do_dealloc(const ::gabs_allocator_h *handle, void *mem);
 
 template <template <class> class BaseAllocator = std::allocator>
 class allocator
-        : public core::handle_wrapper<allocator<BaseAllocator>, dyn_alloc>
+        : public core::handle_wrapper<allocator<BaseAllocator>,
+                                     allocator_handle>
 {
       public:
         using value_type = std::byte;
 
         allocator(const std::shared_ptr<BaseAllocator<value_type>> &underlying)
                 : underlying_(underlying),
-                  core::handle_wrapper<allocator, dyn_alloc>(
-                          &detail::do_alloc<allocator>,
-                          &detail::do_dealloc<allocator>)
+                  core::handle_wrapper<allocator, allocator_handle>(api())
         {
         }
 
@@ -49,7 +47,17 @@ class allocator
                 return *underlying_;
         }
 
+        static const ::gabs_allocator_api *api()
+        {
+                return &api_;
+        }
+
       protected:
+        static constexpr ::gabs_allocator_api api_ = {
+                &detail::do_alloc<allocator>,
+                &detail::do_dealloc<allocator>,
+        };
+
         std::shared_ptr<BaseAllocator<value_type>> underlying_;
 };
 

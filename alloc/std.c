@@ -2,11 +2,11 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#include <gabs/alloc/dynamic.h>
+#include <gabs/alloc.h>
 #include <gabs/alloc/std.h>
 
-int GABS_DYN_ALLOC_IMPL(std, alloc)(const gabs_allocator_h *allocator,
-                                    size_t size, void **mem)
+static int std_alloc(const gabs_allocator_h *allocator, size_t size,
+                     void **mem)
 {
         GABS_UNUSED(allocator);
 
@@ -18,8 +18,7 @@ int GABS_DYN_ALLOC_IMPL(std, alloc)(const gabs_allocator_h *allocator,
         return 0;
 }
 
-int GABS_DYN_ALLOC_IMPL(std, dealloc)(const gabs_allocator_h *allocator,
-                                      void *mem)
+static int std_dealloc(const gabs_allocator_h *allocator, void *mem)
 {
         GABS_UNUSED(allocator);
 
@@ -27,10 +26,20 @@ int GABS_DYN_ALLOC_IMPL(std, dealloc)(const gabs_allocator_h *allocator,
         return 0;
 }
 
-#ifdef GABS_CONFIG_DYN_ALLOC
+static const struct gabs_allocator_api std_api = {
+        .alloc = std_alloc,
+        .dealloc = std_dealloc,
+};
+
+const struct gabs_allocator_api *gabs_std_alloc_api(void)
+{
+        return &std_api;
+}
+
 const gabs_allocator_h *gabs_std_allocator(void)
 {
-        static const gabs_dyn_allocator allocator = GABS_DYN_ALLOC_INIT(std);
-        return GABS_DYN_ALLOC_HANDLE(&allocator);
+        static const gabs_allocator allocator =
+                GABS_ALLOCATOR_INIT(&std_api);
+
+        return GABS_ALLOCATOR_HANDLE(&allocator);
 }
-#endif

@@ -29,7 +29,6 @@ add_oot_subdirectory(contrib/zephyr)
 add_oot_subdirectory(timer)
 
 gabs_provide(gabs-compiler-gcc)
-gabs_provide(gabs-alloc-dynamic)
 gabs_provide(gabs-alloc-zephyr-netbuf)
 gabs_provide(gabs-alloc-zephyr-heap)
 gabs_provide(gabs-alloc-std)
