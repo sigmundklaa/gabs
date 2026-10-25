@@ -73,8 +73,9 @@ template <class T, class Handle> class handle_wrapper
 
         static T *from_handle(const typename Handle::handle_type *h)
         {
-                auto ptr = Handle::from(h);
-                return gabs_container_of(ptr, T, handle_);
+                auto &wrapper = container_of(Handle::from(h),
+                                             &handle_wrapper::handle_);
+                return static_cast<T *>(&wrapper);
         }
 
       protected:
