@@ -17,4 +17,5 @@ endfunction()
 
 add_subdirectory(testing)
 add_subdirectory(timer)
+add_subdirectory(mutex)
 add_subdirectory(cmake)
