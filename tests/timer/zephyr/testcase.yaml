@@ -1,0 +1,6 @@
+tests:
+  libraries.gabs.timer:
+    tags:
+      - gabs
+    integration_platforms:
+      - native_sim
