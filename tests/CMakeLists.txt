@@ -18,3 +18,4 @@ function(gabs_add_test name)
 endfunction()
 
 add_subdirectory(testing)
+add_subdirectory(timer)
