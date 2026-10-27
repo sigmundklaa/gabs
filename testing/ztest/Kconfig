@@ -7,3 +7,19 @@ config GABS_TESTING
     help
       Build the gabs tests with ztest. The C++ standard is a choice, which
       cannot be selected here; the application sets CONFIG_STD_CPP17.
+
+if GABS_TESTING
+
+config GABS_TESTING_ASYNC_STACK_SIZE
+    int "Stack size of the gabs::testing::async() work queue"
+    default 4096
+
+config GABS_TESTING_ASYNC_PRIORITY
+    int "Priority of the gabs::testing::async() work queue"
+    default 0
+    help
+      With the default CONFIG_ZTEST_THREAD_PRIORITY, each case runs in a
+      cooperative thread, so a task only runs while the case waits. The
+      default is the highest preemptible priority.
+
+endif # GABS_TESTING

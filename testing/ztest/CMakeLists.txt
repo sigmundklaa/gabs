@@ -5,4 +5,6 @@ gabs_implement(
         gabs-testing
     INCLUDE
         .
+    SOURCES
+        async.cc
 )
