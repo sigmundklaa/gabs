@@ -1,6 +1,21 @@
+common:
+  tags:
+    - gabs
+  integration_platforms:
+    - native_sim
 tests:
-  libraries.gabs.testing:
-    tags:
-      - gabs
-    integration_platforms:
-      - native_sim
+  libraries.gabs.testing: {}
+  libraries.gabs.testing.all:
+    build_only: true
+    extra_configs:
+      - CONFIG_GABS_ALLOC=y
+      - CONFIG_GABS_ALLOC_STD=y
+      - CONFIG_GABS_ALLOC_ZEPHYR_HEAP=y
+      - CONFIG_GABS_ALLOC_ZEPHYR_NETBUF=y
+      - CONFIG_GABS_LOG=y
+      - CONFIG_GABS_MUTEX=y
+      - CONFIG_GABS_PBUF=y
+      - CONFIG_GABS_RANDOM=y
+      - CONFIG_GABS_SEMAPHORE=y
+      - CONFIG_GABS_TIMER=y
+      - CONFIG_NET_BUF=y

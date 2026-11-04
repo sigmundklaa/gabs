@@ -1,0 +1,5 @@
+name: gabs-tests-cmake
+build:
+  cmake: zephyr
+  depends:
+    - gabs

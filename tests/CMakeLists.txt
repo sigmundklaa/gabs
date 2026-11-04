@@ -17,3 +17,4 @@ endfunction()
 
 add_subdirectory(testing)
 add_subdirectory(timer)
+add_subdirectory(cmake)
