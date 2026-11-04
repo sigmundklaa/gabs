@@ -1,8 +1,5 @@
 
-gabs_module(
-    gabs-timer
-    ADD_TO_INTERFACE
-)
+gabs_module(gabs-timer)
 
 add_subdirectory(posix)
 add_subdirectory(zephyr)

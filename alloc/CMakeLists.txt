@@ -1,9 +1,5 @@
 
-gabs_module(
-    gabs-alloc
-    ADD_TO_INTERFACE
-    ALLOW_MANY
-)
+gabs_module(gabs-alloc)
 
 gabs_sources(gabs-alloc alloc.c)
 

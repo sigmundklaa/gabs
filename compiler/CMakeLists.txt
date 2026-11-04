@@ -1,10 +1,5 @@
 
-gabs_module(
-    gabs-compiler
-    ADD_ALWAYS
-    ADD_TO_INTERFACE
-    DEFAULT
-        gabs-compiler-gcc
-)
-
 add_subdirectory(gcc)
+
+# gcc is the only supported compiler.
+target_link_libraries(gabs-core INTERFACE gabs-compiler-gcc)

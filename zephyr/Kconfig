@@ -1,14 +1,70 @@
 
-config GABS
+menuconfig GABS
     bool "Enable GABS"
     default y
 
-config APP_LINK_WITH_GABS_IFACE
-    bool "Link application with GABS interface library"
-    default y
-    depends on GABS
+if GABS
+
+config GABS_ALLOC
+    bool "Allocators"
+
+if GABS_ALLOC
+
+config GABS_ALLOC_STD
+    bool "Allocator using malloc() and free()"
+
+config GABS_ALLOC_ZEPHYR_HEAP
+    bool "Allocator using a Zephyr heap"
+
+config GABS_ALLOC_ZEPHYR_NETBUF
+    bool "Allocator using a net_buf pool"
+    depends on NET_BUF
+
+endif # GABS_ALLOC
+
+config GABS_LOG
+    bool "Logging"
+
+config GABS_MUTEX
+    bool "Mutexes"
+
+config GABS_PBUF
+    bool "Packet buffers"
+    depends on NET_BUF
+    select GABS_ALLOC
+
+config GABS_RANDOM
+    bool "Random numbers"
+
+config GABS_SEMAPHORE
+    bool "Semaphores"
+
+config GABS_TIMER
+    bool "Timers"
+
+if GABS_TIMER
+
+choice GABS_TIMER_IMPL
+    prompt "Timer implementation"
+    default GABS_TIMER_ZEPHYR
+
+config GABS_TIMER_ZEPHYR
+    bool "Zephyr timers"
+
+config GABS_TIMER_MANUAL
+    bool "Timers fired by the application"
+    help
+      Timers only expire when the application calls
+      gabs_timer_manual_advance() or gabs_timer_manual_fire(). This is meant
+      for tests.
+
+endchoice
+
+endif # GABS_TIMER
 
 rsource "../testing/ztest/Kconfig"
+
+endif # GABS
 
 module = GABS
 module-str = gabs

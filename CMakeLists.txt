@@ -3,17 +3,13 @@ project(gabs)
 
 option(GABS_BUILD_TESTS "Build the gabs tests" OFF)
 
-add_library(gabs)
-
-add_library(gabs_iface INTERFACE)
-target_include_directories(gabs_iface INTERFACE include)
-
-target_link_libraries(gabs PUBLIC gabs_iface)
+add_library(gabs-core INTERFACE)
+target_include_directories(gabs-core INTERFACE include)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/gabs.cmake)
 
-add_subdirectory(contrib/posix)
 add_subdirectory(compiler)
+add_subdirectory(contrib/posix)
 add_subdirectory(alloc)
 add_subdirectory(pbuf)
 add_subdirectory(log)
@@ -22,8 +18,6 @@ add_subdirectory(semaphore)
 add_subdirectory(random)
 add_subdirectory(timer)
 add_subdirectory(testing)
-
-gabs_provide(gabs-timer-posix)
 
 if(GABS_BUILD_TESTS)
     enable_testing()

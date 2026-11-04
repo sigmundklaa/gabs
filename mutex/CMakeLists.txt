@@ -1,10 +1,5 @@
 
-gabs_module(
-    gabs-mutex
-    DEFAULT
-        gabs-mutex-posix
-    ADD_TO_INTERFACE
-)
+gabs_module(gabs-mutex)
 
 add_subdirectory(posix)
 add_subdirectory(zephyr)

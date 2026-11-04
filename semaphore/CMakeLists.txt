@@ -1,10 +1,5 @@
 
-gabs_module(
-    gabs-semaphore
-    DEFAULT
-        gabs-semaphore-posix
-    ADD_TO_INTERFACE
-)
+gabs_module(gabs-semaphore)
 
 add_subdirectory(posix)
 add_subdirectory(zephyr)

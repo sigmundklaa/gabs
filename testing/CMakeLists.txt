@@ -1,8 +1,5 @@
 
-gabs_module(
-    gabs-testing
-    ADD_TO_INTERFACE
-)
+gabs_module(gabs-testing)
 
 add_subdirectory(catch2)
 add_subdirectory(ztest)
