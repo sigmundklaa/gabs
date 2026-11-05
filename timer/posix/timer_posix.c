@@ -455,5 +455,5 @@ int gabs_timer_stop(struct gabs_timer_posix *t)
 
 bool gabs_timer_active(struct gabs_timer_posix *t)
 {
-        return mask_test(&t->state, BIT_ACTIVE);
+        return mask_get(&t->state, BIT_ACTIVE | BIT_SCHED) != 0;
 }
