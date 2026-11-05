@@ -375,6 +375,8 @@ int gabs_timer_ctx_init(struct gabs_timer_posix_ctx *ctx)
 
 int gabs_timer_ctx_deinit(struct gabs_timer_posix_ctx *ctx)
 {
+        size_t i;
+
         gabs_log_dbgf(logger, "Destroying timer context");
 
         atomic_store(&ctx->work_state, WORK_STATE_EXIT);
@@ -382,6 +384,12 @@ int gabs_timer_ctx_deinit(struct gabs_timer_posix_ctx *ctx)
 
         (void)pthread_join(ctx->thread, NULL);
         (void)close(ctx->eventfd);
+
+        for (i = 0; i < gabs_array_size(ctx->timers); i++) {
+                if (mask_test(&ctx->timers[i].state, BIT_USED)) {
+                        timer_cleanup(&ctx->timers[i]);
+                }
+        }
 
         return 0;
 }
