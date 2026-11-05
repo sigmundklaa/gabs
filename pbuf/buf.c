@@ -142,7 +142,7 @@ size_t gabs_pbuf_copy(gabs_pbuf buf, uint8_t *mem, size_t offset,
         size = 0;
         it = buf_seek(&buf, offset, &boundary);
 
-        if (!gabs_pbuf_okay(buf)) {
+        if (!gabs_pbuf_okay(buf) || gabs_pbuf_ci_eoi(it)) {
                 return 0;
         }
 
