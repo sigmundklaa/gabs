@@ -32,6 +32,7 @@ config GABS_PBUF
     bool "Packet buffers"
     depends on NET_BUF
     select GABS_ALLOC
+    select GABS_ALLOC_ZEPHYR_NETBUF
 
 config GABS_RANDOM
     bool "Random numbers"

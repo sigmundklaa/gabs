@@ -8,3 +8,6 @@ gabs_implement(
     SOURCES
         net_buf.c
 )
+
+gabs_get_lib(lib gabs-pbuf-zephyr)
+target_link_libraries(${lib} INTERFACE gabs-alloc-zephyr-netbuf)
