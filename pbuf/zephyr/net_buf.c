@@ -163,3 +163,8 @@ size_t gabs_pbuf_ci_size(struct gabs_pbuf_zephyr_ci it)
 {
         return it.cur->len;
 }
+
+size_t gabs_pbuf_ci_cap(struct gabs_pbuf_zephyr_ci it)
+{
+        return it.cur->size;
+}
