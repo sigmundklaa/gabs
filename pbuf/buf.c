@@ -162,7 +162,7 @@ size_t gabs_pbuf_copy(gabs_pbuf buf, uint8_t *mem, size_t offset,
 
                 cur_size = gabs_min(gabs_pbuf_ci_size(it), max_size - size);
 
-                (void)memcpy(mem, gabs_pbuf_ci_data(it) + cur_offset, cur_size);
+                (void)memcpy(mem, gabs_pbuf_ci_data(it), cur_size);
 
                 mem += cur_size;
                 size += cur_size;
