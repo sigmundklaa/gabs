@@ -22,6 +22,7 @@
 #define BIT_ZOMBIE (1 << 1) /* Set by client, unset by worker */
 #define BIT_ACTIVE (1 << 2) /* Set/unset by worker, unset by client */
 #define BIT_SCHED  (1 << 3) /* Set by client, unset by worker */
+#define BIT_ALLOC  (1 << 4) /* Set by client, unset by worker */
 
 GABS_LOGGER_DECLARE(logger, timer);
 
@@ -129,7 +130,7 @@ static struct gabs_timer_posix *timer_alloc(struct gabs_timer_posix_ctx *ctx)
         for (i = 0; i < gabs_array_size(ctx->timers); i++) {
                 cur = &ctx->timers[i];
 
-                if (mask_set_strict(&cur->state, BIT_USED)) {
+                if (mask_set_strict(&cur->state, BIT_ALLOC)) {
                         return cur;
                 }
         }
@@ -148,27 +149,25 @@ static struct gabs_timer_posix *timer_add(struct gabs_timer_posix_ctx *ctx,
                 return NULL;
         }
 
-        (void)memset(t, 0, sizeof(*t));
-
-        status = gabs_mutex_init(&t->lock);
-        if (status != 0) {
-                atomic_store(&t->state, 0);
-                return NULL;
-        }
-
-        /* Initial state. Safe to update here, will only go from used (with
-         * potentially other bits) to only used set. */
-        atomic_store(&t->state, BIT_USED);
-
         t->ctx = ctx;
         t->cb = cb;
         t->user_arg = user_data;
         t->fd = timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK);
 
         if (t->fd < 0) {
-                timer_cleanup(t);
+                atomic_store(&t->state, 0);
                 return NULL;
         }
+
+        status = gabs_mutex_init(&t->lock);
+        if (status != 0) {
+                (void)close(t->fd);
+                atomic_store(&t->state, 0);
+                return NULL;
+        }
+
+        /* The worker thread reads the slot from here on. */
+        mask_set(&t->state, BIT_USED);
 
         return t;
 }
