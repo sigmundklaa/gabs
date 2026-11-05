@@ -57,6 +57,9 @@ spdlog::level::level_enum convert_level(enum gabs_log_spdlog_level__ level)
         case GABS_LOG_SPDLOG_ERROR__:
                 return spdlog::level::err;
         }
+
+        assert(0);
+        return spdlog::level::err;
 }
 
 std::shared_ptr<spdlog::logger> get_logger(const ::gabs_logger_h *handle)
