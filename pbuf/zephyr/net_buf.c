@@ -1,6 +1,7 @@
 
 #include <zephyr/net_buf.h>
 
+#include <gabs/alloc/zephyr/netbuf.h>
 #include <gabs/pbuf.h>
 
 struct gabs_pbuf_zephyr gabs_pbuf_new(const gabs_allocator_h *alloc,
@@ -8,6 +9,11 @@ struct gabs_pbuf_zephyr gabs_pbuf_new(const gabs_allocator_h *alloc,
 {
         int status;
         struct net_buf *buf;
+
+        if (!gabs_allocator_is(alloc, gabs_zephyr_netbuf_alloc_api())) {
+                assert(0);
+                return (struct gabs_pbuf_zephyr){0};
+        }
 
         status = gabs_alloc(alloc, size, (void**)&buf);
         if (status != 0) {
