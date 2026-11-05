@@ -24,7 +24,7 @@ struct load_levels {
 
 std::string vasprintf_like(const char *fmt, va_list &va)
 {
-        std::size_t size;
+        int size;
         va_list va_dry;
         va_copy(va_dry, va);
         util::defer _([&]() { va_end(va_dry); });
