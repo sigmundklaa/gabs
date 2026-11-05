@@ -134,15 +134,13 @@ struct gabs_pbuf_zephyr_ci gabs_pbuf_ci_insert(struct gabs_pbuf_zephyr_ci it,
 
 void gabs_pbuf_ci_detach(struct gabs_pbuf_zephyr_ci it)
 {
-        struct net_buf *frag = it.cur;
-
         if (*it.head == it.cur) {
                 *it.head = NULL;
+        } else {
+                it.prev->frags = NULL;
         }
 
-        while (frag != NULL) {
-                frag = net_buf_frag_del(NULL, it.cur);
-        }
+        net_buf_unref(it.cur);
 }
 
 struct gabs_pbuf_zephyr_ci gabs_pbuf_ci_remove(struct gabs_pbuf_zephyr_ci it)
