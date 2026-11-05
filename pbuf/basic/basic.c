@@ -109,6 +109,7 @@ uint8_t *gabs_pbuf_ci_reserve_head(struct gabs_pbuf_basic_ci it, size_t bytes)
         assert(bytes <= gabs_pbuf_ci_headroom(it));
 
         data = it.cur->data - bytes;
+        it.cur->data = data;
         it.cur->size += bytes;
 
         return data;
