@@ -35,6 +35,8 @@ static inline bool mask_set_strict(atomic_uint *state, unsigned int mask)
                 if ((expected & mask) != 0) {
                         return false;
                 }
+
+                masked = expected | mask;
         }
 
         return true;
