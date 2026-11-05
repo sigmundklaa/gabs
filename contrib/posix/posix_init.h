@@ -21,7 +21,7 @@ GABS_BEGIN_DECL
  */
 #define POSIX_INIT(prio_)                                                      \
         static void __attribute__((constructor(100 + prio_)))                  \
-        gabs_init_##__LINE__##__(void)
+        GABS_CONCAT_3(gabs_init_, __LINE__, __)(void)
 
 /**
  * @brief Regster function to be invoked at applciation exit.
@@ -38,7 +38,7 @@ GABS_BEGIN_DECL
  */
 #define POSIX_DEINIT(prio_)                                                    \
         static void __attribute__((destructor(100 + prio_)))                   \
-        gabs_deinit_##__LINE__##__(void)
+        GABS_CONCAT_3(gabs_deinit_, __LINE__, __)(void)
 
 GABS_END_DECL
 
