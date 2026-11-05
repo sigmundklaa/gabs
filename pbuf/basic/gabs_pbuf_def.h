@@ -15,6 +15,7 @@
 GABS_BEGIN_DECL
 
 struct gabs_pbuf_basic_frag {
+        uint8_t *base;
         uint8_t *data;
         size_t size;
         size_t cap;

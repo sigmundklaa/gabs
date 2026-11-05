@@ -18,7 +18,8 @@ struct gabs_pbuf_basic gabs_pbuf_new(const gabs_allocator_h *alloc, size_t size)
 
         buf->cap = size;
         buf->size = 0;
-        buf->data = (uint8_t *)buf + sizeof(*buf);
+        buf->base = (uint8_t *)buf + sizeof(*buf);
+        buf->data = buf->base;
         buf->next = NULL;
         buf->refcnt = 1;
         buf->readonly = false;
@@ -42,6 +43,7 @@ struct gabs_pbuf_basic gabs_pbuf_new_ro(const gabs_allocator_h *alloc,
         frag = buf.frags;
 
         frag->readonly = true;
+        frag->base = data;
         frag->data = data;
         frag->size = size;
         frag->cap = size;
@@ -148,15 +150,7 @@ uint8_t *gabs_pbuf_ci_release_tail(struct gabs_pbuf_basic_ci it, size_t bytes)
 
 size_t gabs_pbuf_ci_headroom(struct gabs_pbuf_basic_ci it)
 {
-        uint8_t *base;
-
-        if (it.cur->readonly) {
-                base = it.cur->data;
-        } else {
-                base = gabs_pbuf_ci_data(it);
-        }
-
-        return it.cur->data - base;
+        return it.cur->data - it.cur->base;
 }
 
 size_t gabs_pbuf_ci_tailroom(struct gabs_pbuf_basic_ci it)
