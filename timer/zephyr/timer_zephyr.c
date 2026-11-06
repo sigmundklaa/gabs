@@ -36,7 +36,9 @@ static struct timer_info *reserve(void)
         size_t idx;
 
         status = sys_bitarray_alloc(&pool_bitarray, 1, &idx);
-        __ASSERT(status == 0, "Timer allocation failed.");
+        if (status != 0) {
+                return NULL;
+        }
 
         return &pool[idx];
 }
@@ -68,7 +70,7 @@ static void timer_expiry(struct k_work *work)
 
 bool gabs_timer_okay(gabs_timer timer_arg)
 {
-        return true;
+        return timer_arg != NULL;
 }
 
 gabs_timer gabs_timer_install(struct gabs_timer_zephyr_ctx *ctx,
@@ -77,6 +79,10 @@ gabs_timer gabs_timer_install(struct gabs_timer_zephyr_ctx *ctx,
         struct timer_info *info;
 
         info = reserve();
+        if (info == NULL) {
+                return NULL;
+        }
+
         info->callback = cb;
         info->user_data = user_data;
         info->ctx = ctx;
