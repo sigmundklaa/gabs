@@ -13,7 +13,7 @@ macro(add_oot_subdirectory name)
     add_subdirectory("${ZEPHYR_CURRENT_MODULE_DIR}/${name}" ${name})
 endmacro()
 
-add_oot_subdirectory(compiler)
+add_oot_subdirectory(toolchain)
 add_oot_subdirectory(alloc)
 add_oot_subdirectory(pbuf)
 add_oot_subdirectory(log)

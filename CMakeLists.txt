@@ -8,7 +8,7 @@ target_include_directories(gabs-core INTERFACE include)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/gabs.cmake)
 
-add_subdirectory(compiler)
+add_subdirectory(toolchain)
 add_subdirectory(contrib/posix)
 add_subdirectory(alloc)
 add_subdirectory(pbuf)
