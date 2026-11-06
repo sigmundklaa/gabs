@@ -81,8 +81,8 @@ that uses a module links an implementation of it, and compiles its sources:
 target_link_libraries(myexe PRIVATE gabs-timer-posix)
 ```
 
-The same goes for the modules an implementation uses: `gabs-timer-posix` uses
-`gabs-log` and `gabs-mutex`, so a target that links it also links an
+The same goes for the modules an implementation requires: `gabs-timer-posix`
+requires `gabs-log` and `gabs-mutex`, so a target that links it also links an
 implementation of each.
 
 A library that leaves the choice to the application links the module, and is
