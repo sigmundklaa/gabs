@@ -232,11 +232,11 @@ GABS_API size_t gabs_pbuf_ci_headroom(gabs_pbuf_ci it);
 GABS_API size_t gabs_pbuf_ci_tailroom(gabs_pbuf_ci it);
 
 /**
- * @brief Insert @p buf into the underlying buffer pointed to by @p it,
- * placing it as the element immediately following @p it.
+ * @brief Insert @p buf into the underlying buffer at the position of @p it,
+ * before the segment @p it points to.
  *
- * The returned iterator is the next element in the sequence, which now is
- * an iterator corresponding to the head of @p buf.
+ * The returned iterator points to the head of @p buf, at the position of
+ * @p it. The segment @p it pointed to follows the last segment of @p buf.
  */
 GABS_API gabs_pbuf_ci gabs_pbuf_ci_insert(gabs_pbuf_ci it, gabs_pbuf buf);
 
