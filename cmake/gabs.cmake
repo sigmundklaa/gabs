@@ -67,12 +67,13 @@ endfunction()
 #   gabs_implement(
 #       <implementation>
 #       IMPLEMENTS <module>
+#       [REQUIRES <module>...]
 #       [INCLUDE <directory>...]
 #       [SOURCES <source>...]
 #   )
 function(gabs_implement impl)
     set(_vargs IMPLEMENTS)
-    set(_mvargs INCLUDE SOURCES)
+    set(_mvargs REQUIRES INCLUDE SOURCES)
     cmake_parse_arguments(
         gabs_implement_arg
         ""
@@ -99,6 +100,11 @@ function(gabs_implement impl)
             ${impl}-iface
             ${gabs_implement_arg_IMPLEMENTS}
     )
+
+    foreach(dep ${gabs_implement_arg_REQUIRES})
+        target_link_libraries(${impl}-iface INTERFACE ${dep}-iface)
+        target_link_libraries(${impl} INTERFACE ${dep})
+    endforeach()
 
     if(gabs_implement_arg_SOURCES)
         gabs_sources(${impl} ${gabs_implement_arg_SOURCES})

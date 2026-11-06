@@ -60,10 +60,14 @@ for a module, the `gabs_implement` function is used:
 gabs_implement(
     <implementation_name>
     IMPLEMENTS <module_name>
+    [REQUIRES <dependencies>...]
     [INCLUDE <include_dir>...]
     [SOURCES <source_file>...]
 )
 ```
+
+`REQUIRES` lists other `gabs` modules that the implementation uses, as for
+`gabs_module`.
 
 This also creates two libraries: `<implementation_name>-iface`, which holds the
 headers of the implementation and of the module, and `<implementation_name>`,
