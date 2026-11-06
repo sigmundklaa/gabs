@@ -9,7 +9,7 @@
 
 uint32_t gabs_random(void)
 {
-        return random();
+        return random() % ((1UL << 31) - 1);
 }
 
 POSIX_INIT(10)
