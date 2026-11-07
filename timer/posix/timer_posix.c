@@ -9,6 +9,7 @@
 #include <sys/eventfd.h>
 #include <errno.h>
 #include <poll.h>
+#include <sched.h>
 #include <unistd.h>
 #include <stdatomic.h>
 
@@ -405,6 +406,8 @@ gabs_timer gabs_timer_install(struct gabs_timer_posix_ctx *ctx,
 
 int gabs_timer_uninstall(struct gabs_timer_posix *t)
 {
+        struct gabs_timer_posix_ctx *ctx = t->ctx;
+
         /* Ensure timer is fully stopepd and can not fire after releasing
          * the lock. */
         timer_lock(t);
@@ -413,8 +416,17 @@ int gabs_timer_uninstall(struct gabs_timer_posix *t)
         }
         timer_unlock(t);
 
-        /* Perform cleanup when worker is done */
+        /* Only the worker releases a timer, as it may be polling its fd. It
+         * clears BIT_ZOMBIE once it has. */
         mask_set(&t->state, BIT_ZOMBIE);
+        if (in_callback(ctx)) {
+                return 0;
+        }
+
+        trigger_reset(ctx);
+        while (mask_test(&t->state, BIT_ZOMBIE)) {
+                (void)sched_yield();
+        }
 
         return 0;
 }
