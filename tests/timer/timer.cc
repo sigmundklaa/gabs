@@ -1,6 +1,8 @@
 
 #include <errno.h>
 
+#include <vector>
+
 #include <gabs/testing/testing.h>
 
 #include <gabs/semaphore.h>
@@ -302,4 +304,28 @@ GABS_TEST_F(timer, uninstall_from_own_callback)
         GABS_EXPECT_EQ(gabs_sem_down(&record.fired, fire_timeout_us), 0);
 
         GABS_ASSERT_EQ(record.status, 0);
+}
+
+GABS_TEST_F(timer, uninstall_frees_timer_of_full_pool)
+{
+        std::vector<gabs_timer> timers;
+
+        for (;;) {
+                gabs_timer t =
+                        gabs_timer_install(&fixture->ctx, noop_cb, nullptr);
+                if (!gabs_timer_okay(t)) {
+                        break;
+                }
+
+                timers.push_back(t);
+        }
+
+        for (gabs_timer t : timers) {
+                GABS_EXPECT_EQ(gabs_timer_uninstall(t), 0);
+        }
+
+        gabs_timer again = gabs_timer_install(&fixture->ctx, noop_cb, nullptr);
+        GABS_ASSERT_TRUE(gabs_timer_okay(again));
+
+        GABS_ASSERT_EQ(gabs_timer_uninstall(again), 0);
 }
