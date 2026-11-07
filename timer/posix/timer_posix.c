@@ -31,10 +31,6 @@ enum {
         WORK_STATE_EXIT,
 };
 
-/* Thread local variable used to detect if API calls are made from inside
- * a timer callback. This is used to prevent recursive locking attempts. */
-static __thread struct gabs_timer_posix *firing = NULL;
-
 static void trigger_reset(struct gabs_timer_posix_ctx *ctx)
 {
         uint64_t count;
@@ -181,10 +177,8 @@ static struct gabs_timer_posix *timer_add(struct gabs_timer_posix_ctx *ctx,
  */
 static void timer_alarm(struct gabs_timer_posix *t)
 {
-        firing = t;
-
         if (t->cb == NULL) {
-                goto exit;
+                return;
         }
 
         (void)gabs_mutex_lock(&t->lock, GABS_TIMEOUT_MAX);
@@ -194,17 +188,21 @@ static void timer_alarm(struct gabs_timer_posix *t)
                 }
         }
         (void)gabs_mutex_unlock(&t->lock);
+}
 
-exit:
-        firing = NULL;
+/* The worker thread runs only timer callbacks. */
+static bool in_callback(struct gabs_timer_posix_ctx *ctx)
+{
+        return pthread_equal(pthread_self(), ctx->thread);
 }
 
 /* Acquire the lock for the associated timer, taking into account re-entry from
- * the timer callback function.
+ * a timer callback function. In a callback, no callback of @p t can run, as
+ * the worker thread runs them one at a time.
  */
 static void timer_lock(struct gabs_timer_posix *t)
 {
-        if (firing == t) {
+        if (in_callback(t->ctx)) {
                 return;
         }
 
@@ -212,10 +210,10 @@ static void timer_lock(struct gabs_timer_posix *t)
 }
 
 /* Release the lock for the associated timer, taking into account re-entry from
- * the timer callback function. */
+ * a timer callback function. */
 static void timer_unlock(struct gabs_timer_posix *t)
 {
-        if (firing == t) {
+        if (in_callback(t->ctx)) {
                 return;
         }
 
