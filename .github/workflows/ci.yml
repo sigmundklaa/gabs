@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    container:
+      image: node:24.21.0-trixie
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+              cmake ninja-build catch2 libspdlog-dev
+      - name: Configure
+        run: cmake -B build -G Ninja -DGABS_BUILD_TESTS=ON
+      - name: Build
+        run: cmake --build build
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+  zephyr:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/zephyrproject-rtos/ci-base:v0.29.4
+    env:
+      ZEPHYR_BASE: /zephyr
+      ZEPHYR_TOOLCHAIN_VARIANT: host
+    steps:
+      - uses: actions/checkout@v7
+      - name: Fetch Zephyr
+        run: >-
+          git clone --depth 1 --branch v4.5.0
+          https://github.com/zephyrproject-rtos/zephyr "$ZEPHYR_BASE"
+      - name: Test
+        run: >-
+          python3 "$ZEPHYR_BASE/scripts/twister" -T tests --inline-logs
+          -p native_sim -p native_sim/native/64
+          -x "ZEPHYR_MODULES=$GITHUB_WORKSPACE"
