@@ -5,7 +5,7 @@
 
 #include <gabs/pbuf.h>
 
-#include "pbuf_alloc.h"
+#include "pbuf_alloc.hh"
 
 namespace
 {
@@ -15,18 +15,25 @@ constexpr size_t buf_size = 32;
 const uint8_t data[] = {0, 1, 2, 3, 4, 5, 6, 7};
 constexpr size_t half = sizeof(data) / 2;
 
+const gabs_allocator_h *allocator()
+{
+        return gabs::tests::pbuf_allocator::instance().handle();
+}
+
 class leak_fixture
 {
       public:
         ~leak_fixture()
         {
-                GABS_EXPECT_EQ(gabs_test_pbuf_outstanding(), 0u);
+                GABS_EXPECT_EQ(
+                        gabs::tests::pbuf_allocator::instance().outstanding(),
+                        0u);
         }
 };
 
 gabs_pbuf new_with(const uint8_t *mem, size_t size)
 {
-        gabs_pbuf buf = gabs_pbuf_new(gabs_test_pbuf_alloc(), buf_size);
+        gabs_pbuf buf = gabs_pbuf_new(allocator(), buf_size);
 
         GABS_ASSERT_TRUE(gabs_pbuf_okay(buf));
         gabs_pbuf_put(&buf, mem, size);
@@ -59,7 +66,7 @@ GABS_SUITE_F(pbuf, leak_fixture);
 
 GABS_TEST_F(pbuf, new_is_okay_and_empty)
 {
-        gabs_pbuf buf = gabs_pbuf_new(gabs_test_pbuf_alloc(), buf_size);
+        gabs_pbuf buf = gabs_pbuf_new(allocator(), buf_size);
         bool okay = gabs_pbuf_okay(buf);
         size_t size = gabs_pbuf_size(buf);
 
@@ -71,7 +78,7 @@ GABS_TEST_F(pbuf, new_is_okay_and_empty)
 
 GABS_TEST_F(pbuf, new_has_requested_room)
 {
-        gabs_pbuf buf = gabs_pbuf_new(gabs_test_pbuf_alloc(), buf_size);
+        gabs_pbuf buf = gabs_pbuf_new(allocator(), buf_size);
         gabs_pbuf_ci it = gabs_pbuf_ci_init(&buf);
         size_t cap = gabs_pbuf_ci_cap(it);
         size_t tailroom = gabs_pbuf_tailroom(buf);
@@ -94,7 +101,7 @@ GABS_TEST_F(pbuf, put_then_copy)
 
 GABS_TEST_F(pbuf, put_takes_tailroom)
 {
-        gabs_pbuf buf = gabs_pbuf_new(gabs_test_pbuf_alloc(), buf_size);
+        gabs_pbuf buf = gabs_pbuf_new(allocator(), buf_size);
         size_t before = gabs_pbuf_tailroom(buf);
         size_t after;
 
@@ -109,7 +116,7 @@ GABS_TEST_F(pbuf, new_ro_exposes_data)
 {
         uint8_t src[] = {9, 8, 7, 6};
         gabs_pbuf buf =
-                gabs_pbuf_new_ro(gabs_test_pbuf_alloc(), src, sizeof(src));
+                gabs_pbuf_new_ro(allocator(), src, sizeof(src));
         bool okay = gabs_pbuf_okay(buf);
         bool ok = okay && holds(buf, src, sizeof(src));
 
@@ -258,7 +265,7 @@ GABS_TEST_F(pbuf, copy_stops_at_max_size)
 GABS_TEST_F(pbuf, view_of_subrange)
 {
         gabs_pbuf buf = new_with(data, sizeof(data));
-        gabs_pbuf view = gabs_pbuf_view(buf, 2, half, gabs_test_pbuf_alloc());
+        gabs_pbuf view = gabs_pbuf_view(buf, 2, half, allocator());
         bool okay = gabs_pbuf_okay(view);
         bool ok = okay && holds(view, data + 2, half);
 
@@ -274,7 +281,7 @@ GABS_TEST_F(pbuf, view_of_subrange)
 GABS_TEST_F(pbuf, view_across_fragments)
 {
         gabs_pbuf buf = new_chain();
-        gabs_pbuf view = gabs_pbuf_view(buf, 2, half, gabs_test_pbuf_alloc());
+        gabs_pbuf view = gabs_pbuf_view(buf, 2, half, allocator());
         bool okay = gabs_pbuf_okay(view);
         bool ok = okay && holds(view, data + 2, half);
 
@@ -291,7 +298,7 @@ GABS_TEST_F(pbuf, view_shares_data)
 {
         const uint8_t expected[] = {2, 42, 4, 5};
         gabs_pbuf buf = new_with(data, sizeof(data));
-        gabs_pbuf view = gabs_pbuf_view(buf, 2, half, gabs_test_pbuf_alloc());
+        gabs_pbuf view = gabs_pbuf_view(buf, 2, half, allocator());
         bool okay = gabs_pbuf_okay(view);
         bool ok;
 
@@ -310,7 +317,7 @@ GABS_TEST_F(pbuf, view_shares_data)
 GABS_TEST_F(pbuf, clone_of_subrange)
 {
         gabs_pbuf buf = new_chain();
-        gabs_pbuf clone = gabs_pbuf_clone(buf, 2, half, gabs_test_pbuf_alloc());
+        gabs_pbuf clone = gabs_pbuf_clone(buf, 2, half, allocator());
         bool okay = gabs_pbuf_okay(clone);
         bool ok = okay && holds(clone, data + 2, half);
 
@@ -326,7 +333,7 @@ GABS_TEST_F(pbuf, clone_of_subrange)
 GABS_TEST_F(pbuf, clone_does_not_share_data)
 {
         gabs_pbuf buf = new_with(data, sizeof(data));
-        gabs_pbuf clone = gabs_pbuf_clone(buf, 2, half, gabs_test_pbuf_alloc());
+        gabs_pbuf clone = gabs_pbuf_clone(buf, 2, half, allocator());
         bool okay = gabs_pbuf_okay(clone);
         bool ok;
 
