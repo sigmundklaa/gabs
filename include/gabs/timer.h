@@ -118,6 +118,8 @@ GABS_API int gabs_timer_stop(gabs_timer timer);
 /**
  * @brief Check if @p timer is active (running)
  *
+ * A timer is active while its callback runs.
+ *
  * @return bool
  * @retval true Timer is active (will expire at some point)
  * @retval false Timer is inactive/idle

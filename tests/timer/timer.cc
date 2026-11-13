@@ -54,6 +54,7 @@ struct fire_record {
         int count = 0;
         int restarts = 0;
         int status = 0;
+        bool active = false;
 };
 
 void record_cb(gabs_timer t, void *arg)
@@ -78,6 +79,17 @@ void restart_cb(gabs_timer t, void *arg)
                 record->status = gabs_timer_restart(t, short_delay_us);
                 return;
         }
+
+        (void)gabs_sem_up(&record->fired);
+}
+
+void start_cb(gabs_timer t, void *arg)
+{
+        auto record = static_cast<fire_record *>(arg);
+
+        record->count++;
+        record->active = gabs_timer_active(t);
+        record->status = gabs_timer_start(t, short_delay_us);
 
         (void)gabs_sem_up(&record->fired);
 }
@@ -291,6 +303,22 @@ GABS_TEST_F(timer, restart_from_callback_fires_again)
 
         GABS_ASSERT_EQ(record.count, 3);
         GABS_ASSERT_EQ(record.status, 0);
+}
+
+GABS_TEST_F(timer, active_in_own_callback)
+{
+        fire_record record;
+        gabs_timer t = gabs_timer_install(&fixture->ctx, start_cb, &record);
+        GABS_ASSERT_TRUE(gabs_timer_okay(t));
+
+        GABS_EXPECT_EQ(gabs_timer_start(t, short_delay_us), 0);
+        GABS_EXPECT_EQ(gabs_sem_down(&record.fired, fire_timeout_us), 0);
+        GABS_EXPECT_NE(gabs_sem_down(&record.fired, no_fire_timeout_us), 0);
+        GABS_EXPECT_EQ(gabs_timer_uninstall(t), 0);
+
+        GABS_ASSERT_EQ(record.count, 1);
+        GABS_ASSERT_TRUE(record.active);
+        GABS_ASSERT_EQ(record.status, -EBUSY);
 }
 
 GABS_TEST_F(timer, uninstall_from_own_callback)
