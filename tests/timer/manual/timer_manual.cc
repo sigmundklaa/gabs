@@ -35,6 +35,7 @@ struct fire_record {
         int count = 0;
         int restarts = 0;
         int status = 0;
+        bool active = false;
         std::vector<uint64_t> times;
         std::vector<int> *order = nullptr;
         int id = 0;
@@ -283,7 +284,7 @@ GABS_TEST_F(timer_manual, restart_from_callback_fires_within_advance)
         GABS_EXPECT_EQ(gabs_timer_uninstall(t), 0);
 }
 
-GABS_TEST_F(timer_manual, start_from_callback_succeeds)
+GABS_TEST_F(timer_manual, start_from_callback_is_busy)
 {
         fire_record record;
         gabs_timer t = gabs_timer_install(
@@ -292,6 +293,7 @@ GABS_TEST_F(timer_manual, start_from_callback_succeeds)
                         auto record = static_cast<fire_record *>(arg);
 
                         record->count++;
+                        record->active = gabs_timer_active(t);
                         record->status = gabs_timer_start(t, delay_us);
                 },
                 &record);
@@ -300,8 +302,32 @@ GABS_TEST_F(timer_manual, start_from_callback_succeeds)
         GABS_ASSERT_EQ(gabs_timer_start(t, delay_us), 0);
 
         GABS_EXPECT_EQ(gabs_timer_manual_advance(&fixture->ctx, delay_us), 1);
+        GABS_EXPECT_TRUE(record.active);
+        GABS_EXPECT_EQ(record.status, -EBUSY);
+        GABS_EXPECT_FALSE(gabs_timer_active(t));
+
+        GABS_EXPECT_EQ(gabs_timer_uninstall(t), 0);
+}
+
+GABS_TEST_F(timer_manual, stop_from_callback_stays_stopped)
+{
+        fire_record record;
+        gabs_timer t = gabs_timer_install(
+                &fixture->ctx,
+                [](gabs_timer t, void *arg) {
+                        auto record = static_cast<fire_record *>(arg);
+
+                        record->count++;
+                        record->status = gabs_timer_stop(t);
+                },
+                &record);
+
+        GABS_ASSERT_TRUE(gabs_timer_okay(t));
+        GABS_ASSERT_EQ(gabs_timer_start(t, delay_us), 0);
+
+        GABS_EXPECT_EQ(gabs_timer_manual_advance(&fixture->ctx, delay_us), 1);
         GABS_EXPECT_EQ(record.status, 0);
-        GABS_EXPECT_TRUE(gabs_timer_active(t));
+        GABS_EXPECT_FALSE(gabs_timer_active(t));
 
         GABS_EXPECT_EQ(gabs_timer_uninstall(t), 0);
 }

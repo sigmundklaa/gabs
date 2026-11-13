@@ -9,9 +9,17 @@
 
 static void timer_fire(struct gabs_timer_manual *t)
 {
-        /* Cleared first, so the callback can start the timer again. */
-        t->active = false;
+        uint64_t seq;
+
+        seq = t->seq;
+
         t->cb(t, t->user_arg);
+
+        /* A restart from the callback gives the timer a new sequence
+         * number, and keeps it active. */
+        if (t->seq == seq) {
+                t->active = false;
+        }
 }
 
 static struct gabs_timer_manual *next_expired(struct gabs_timer_manual_ctx *ctx,
